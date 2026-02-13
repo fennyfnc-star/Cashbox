@@ -1,0 +1,23 @@
+{
+  "index.html": {
+    "file": "assets/index-BWZvJl16.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "css": [
+      "assets/index-BqEq4kcF.css"
+    ],
+    "assets": [
+      "assets/cashbox-logo-xPxM5JuM.webp",
+      "assets/plane-BgKCcnVr.jpg"
+    ]
+  },
+  "src/assets/images/cashbox-logo.webp": {
+    "file": "assets/cashbox-logo-xPxM5JuM.webp",
+    "src": "src/assets/images/cashbox-logo.webp"
+  },
+  "src/assets/images/plane.jpg": {
+    "file": "assets/plane-BgKCcnVr.jpg",
+    "src": "src/assets/images/plane.jpg"
+  }
+}

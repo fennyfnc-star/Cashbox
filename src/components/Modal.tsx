@@ -6,6 +6,7 @@ const Modal = ({
   open,
   setOpen,
   loading = false,
+  loadingMsg = "Updating"
 }: PropsWithChildren & ModalProps) => {
   const closeModal = () => {
     setOpen(false);
@@ -27,7 +28,7 @@ const Modal = ({
         {loading && (
           <div className="absolute w-full h-full z-20 bg-neutral-500/50 backdrop-blur-xs gap-4 flex-col top-0 left-0 flex items-center justify-center">
             <span className="spinloader"></span>
-            <span className="text-white font-bold">Updating..</span>
+            <span className="text-white font-bold">{loadingMsg}..</span>
           </div>
         )}
         {children}

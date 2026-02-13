@@ -20,6 +20,15 @@ export type PrizeDrawNode = {
   };
 };
 
+export type CreatePrizeDrawProps = {
+  title: string;
+  itemDescription: string;
+  itemStatus: boolean;
+  price: number;
+  tickets: number;
+  itemCategory: string;
+};
+
 export type PrizeCateogry = {
   slug: string;
   name: string;

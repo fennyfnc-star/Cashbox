@@ -8,7 +8,6 @@ import type { PrizeDrawNode } from "@/types/graphql";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import { useLocation, useSearchParams } from "react-router-dom";
 import CircleLoader from "@/components/CircleLoader";
-import { wpgraphql } from "@/utils/graphql";
 
 const PrizeDrawManagement = () => {
   const [open, setOpen] = useState(false);
@@ -39,14 +38,6 @@ const PrizeDrawManagement = () => {
     setOpen(true);
   };
 
-  async function fireRest() {
-    await wpgraphql.fethcRest();
-  }
-
-  useEffect(() => {
-    fireRest();
-  }, []);
-
   return (
     <MainLayout>
       <AddItemModal open={openAdd} setOpen={setOpenAdd} />
@@ -55,7 +46,7 @@ const PrizeDrawManagement = () => {
         <ItemModal open={open} setOpen={setOpen} item={selectedItem} />
       )}
       <div className="flex flex-col gap-6 p-6">
-        <div className="flex flex-col md:flex-row gap-4 pb-6 border-b border-neutral-200 bg-white sticky top-8 justify-between w-full">
+        <div className="flex flex-col md:flex-row gap-4 pb-6 border-b border-neutral-200 bg-white sticky top-0 pt-6 -mt-8 justify-between w-full">
           <div className="flex flex-col gap-2 flex-1">
             <span className="text-2xl font-bold">Prize Draw Management</span>
             <span className="text-sm text-neutral-400">

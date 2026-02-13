@@ -1,4 +1,8 @@
-import type { PrizeCategoryProps, PrizeDrawNode } from "@/types/graphql";
+import type {
+  CreatePrizeDrawProps,
+  PrizeCategoryProps,
+  PrizeDrawNode,
+} from "@/types/graphql";
 import { GraphQLClient, gql } from "graphql-request";
 
 class WPGraphQLClient {
@@ -15,24 +19,18 @@ class WPGraphQLClient {
     this.loginAdmin();
   }
 
-  async fethcRest(): Promise<any> {
-    console.log("firing rest");
-    const res = await fetch("https://cashbox.com.au/wp-json/wp/v2/prize_draws", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.accessToken}`,
-      },
-      body: JSON.stringify({
-        title: "Prize Draw via REST",
-        acf: { prizeItemsManagement: { itemStatus: true } },
-      }),
-    });
-
-    console.log("RESULT: ", res);
-  }
-
   // ================== METHODS =====================
+
+  async CreatePrizeDrawItem(item: CreatePrizeDrawProps) {
+    try {
+      await this.refreshAccessToken();
+      const data = await this.client.request(CREATE_PRIZE_DRAW, item);
+      console.log(data);
+    } catch (error: any) {
+      console.error("Error create prize item: ", error);
+      this.accessToken = null;
+    }
+  }
 
   async fetchPrizeDraws(): Promise<PrizeDrawNode[]> {
     await this.refreshAccessToken();
@@ -246,30 +244,38 @@ const GET_PRICE_CATEGORIES = gql`
 //   }
 // `;
 
-
-// TODO add item
-// mutation {
-//   createPrizeDraw(
-//     input: {
-//       title: "Test Prize Draw"
-//       status: PUBLISH
-//       prizeItemsManagement: {
-//         itemStatus: true
-//         itemDescription: "Amazing Prize Example"
-//         price: 100
-//         tickets: 50
-//       }
-//     }
-//   ) {
-//     prizeDraw {
-//       id
-//       title
-//       prizeItemsManagement {
-//         itemStatus
-//         itemDescription
-//         price
-//         tickets
-//       }
-//     }
-//   }
-// }
+const CREATE_PRIZE_DRAW = gql`
+  mutation CreatePrizeDraw(
+    $title: String!
+    $itemDescription: String
+    $itemStatus: Boolean
+    $price: Float
+    $tickets: Int
+    $itemCategory: String
+  ) {
+    createPrizeDraw(
+      input: {
+        title: $title
+        status: PUBLISH
+        prizeItemsManagement: {
+          itemDescription: $itemDescription
+          itemStatus: $itemStatus
+          price: $price
+          tickets: $tickets
+        }
+        prizeCategories: { nodes: { name: $itemCategory } }
+      }
+    ) {
+      prizeDraw {
+        id
+        title
+        prizeItemsManagement {
+          itemDescription
+          itemStatus
+          price
+          tickets
+        }
+      }
+    }
+  }
+`;

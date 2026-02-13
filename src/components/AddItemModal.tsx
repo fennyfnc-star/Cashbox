@@ -3,13 +3,22 @@ import { BiPencil } from "react-icons/bi";
 import { IoClose } from "react-icons/io5";
 import Button from "./Button";
 import type { ModalProps } from "../types/modal";
-import itemImage from "@/assets/images/plane.jpg";
+import "@/styles/addItem.css";
 import MediaUploader from "./MediaUploader";
+import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
+import FileUploadPrime from "./FileUpload";
+import { InputText } from "primereact/inputtext";
+import RichTextEditor from "./RichTextEditor";
+import { InputSwitch } from "primereact/inputswitch";
+import { useState } from "react";
 
 const AddItemModal = ({ open, setOpen }: ModalProps) => {
+  const prizeStore = usePrizeDrawStore();
+  const [checked, setChecked] = useState(false);
+
   return (
     <Modal open={open} setOpen={setOpen}>
-      <div className="flex items-center justify-between p-8">
+      <div className="flex items-center w-[765px] justify-between p-8">
         <div className="flex gap-4 items-end flex-1">
           <div className="flex flex-col">
             <span className="font-bold text-xl">Add New Item</span>
@@ -24,77 +33,77 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
           onClick={() => setOpen(false)}
         />
       </div>
-      <hr className="w-full border-b border-slate-100 mb-6" />
-      <div className="flex px-8 pb-8 gap-8">
-        <div className="flex flex-col gap-4">
-          <img
-            src={itemImage}
-            className="h-[300px] w-[350px] object-cover object-center"
-            alt=""
-          />
-        </div>
-        <div className="flex flex-col w-[400px] gap-8">
-          <div className="flex gap flex-col gap-1">
-            <span className="uppercase text-xs text-neutral-400 font-semibold">
-              Product Heading
-            </span>
+      <hr className="w-full border-b border-slate-100" />
 
-            <input
-              type="text"
-              name=""
-              id=""
-              placeholder="Enter Item name"
-              className="border-blue-400 border rounded-lg py-2 outline-blue-500 px-4"
+      {/* ============== INPUT FIELDS =============== */}
+      <div className="flex flex-col min-h-0 max-h-[70vh] pb-12 overflow-auto">
+        <div className="flex gap-2 flex-col px-12 p-4 -mb-4">
+          <span className="font-medium">Category</span>
+          <select name="" id="" className="input-field ">
+            <option value="" className="hidden">
+              -- Select Category --
+            </option>
+            {prizeStore.categories.map((val, idx) => (
+              <option key={`${val.slug}-${idx}`} value={val.name}>
+                {val.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex gap-2 flex-col p-4 px-12">
+          <span className="font-medium">Item Name</span>
+          <input type="text" className="input-field" />
+        </div>
+        <div className="px-12">
+          <FileUploadPrime />
+        </div>
+
+        <div className="flex gap-2 flex-col p-4 mx-10">
+          <span className="font-medium">Description</span>
+          <RichTextEditor />
+        </div>
+
+        <div className="flex w-full justify-between items-center px-14 gap-4">
+          <div className="flex gap-2 flex-col flex-1">
+            <span className="font-medium">Price</span>
+            <div className="flex gap-4 input-field">
+              <span className="font-bold">$</span>
+              <input type="number" className="outline-none border-none" />
+            </div>
+          </div>
+          <div className="flex gap-2 flex-col flex-1">
+            <span className="font-medium">Stock Quantity</span>
+            <input type="number" className="input-field " />
+          </div>
+        </div>
+
+        <div className="flex gap-2 flex-col flex-1 mt-4 px-14">
+          <span className="font-medium">Amounts of Tickets Required</span>
+          <input type="number" className="input-field" placeholder="ex. 500" />
+        </div>
+
+        <div className="px-14 mt-4 flex place-content-center">
+          <div className="flex justify-between w-full p-4 rounded-3xl items-center border border-neutral-200">
+            <div className="flex flex-col">
+              <span>Public Visibility</span>
+              <span>Make this item visible to all users immediately</span>
+            </div>
+            <InputSwitch
+              checked={checked}
+              onChange={(e) => setChecked(e.value)}
             />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="uppercase text-xs text-neutral-400 font-semibold">
-              Description
-            </span>
-            <textarea
-              placeholder="Tell us something about this item."
-              cols={8}
-              rows={5}
-              className="border-blue-400 border rounded-lg outline-blue-500 p-2 text-sm"
-            ></textarea>
-            
-          <MediaUploader />
-          </div>
-          <div className="flex gap-8">
-            <div className="flex flex-col gap-1 ">
-              <span className="uppercase text-xs text-neutral-400 font-semibold">
-                Listed Price
-              </span>
-              <div className="flex gap-2">
-                <span className="text-orange-400 font-bold text-2xl">$</span>{" "}
-                <input
-                  type="number"
-                  placeholder="ex. 8000"
-                  className="border rounded-lg outline-blue-500 py-1 px-2 w-40 border-blue-400"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="uppercase text-xs text-neutral-400 font-semibold">
-                Tickets Required
-              </span>
-              <input
-                type="number"
-                placeholder="ex.1000"
-                className="border rounded-lg outline-blue-500 py-1 px-2 w-40 border-blue-400"
-              />
-            </div>
           </div>
         </div>
       </div>
+
       <hr className="w-full border-b border-slate-100" />
-      <div className="px-8 py-5 flex gap-4 justify-end">
-        <Button className="bg-green-100 border border-green-300 text-green-700">
+      <div className="px-8 py-5 flex gap-4 bg-orange-200 justify-end">
+        <Button className="bg-white font-bold">
           <BiPencil />
-          <span>Create</span>
+          <span>Save Draft</span>
         </Button>
-        <Button className="bg-neutral-100" onClick={() => setOpen(false)}>
-          <span>Close</span>
+        <Button className="bg-orange-400 text-white font-bold rounded" onClick={() => setOpen(false)}>
+          <span>Make Live</span>
         </Button>
       </div>
     </Modal>

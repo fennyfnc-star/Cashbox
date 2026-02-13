@@ -28,7 +28,6 @@
   }
 }
 
-
 /* Scope animation trigger */
 @media (prefers-reduced-motion: no-preference) {
   #react-root a:nth-of-type(2) .logo {

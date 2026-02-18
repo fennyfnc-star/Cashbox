@@ -184,6 +184,7 @@ const GET_PRIZE_DRAWS = gql`
         slug
         prizeCategories {
           nodes {
+            id
             slug
             name
           }
@@ -191,6 +192,7 @@ const GET_PRIZE_DRAWS = gql`
         prizeItemsManagement {
           itemImage {
             node {
+              id
               sourceUrl
               altText
             }

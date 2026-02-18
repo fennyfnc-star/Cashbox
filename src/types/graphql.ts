@@ -16,11 +16,12 @@ export type PrizeDrawNode = {
   slug: string;
   prizeItemsManagement: PrizeItem;
   prizeCategories: {
-    nodes: PrizeCateogry[];
+    nodes: PrizeCategory[];
   };
 };
 
 export type CreatePrizeDrawProps = {
+  id?: string;
   title: string;
   itemDescription: string;
   itemStatus: boolean;
@@ -30,8 +31,8 @@ export type CreatePrizeDrawProps = {
   mediaIds: number[];
 };
 
-export type PrizeCateogry = {
-  id: number;
+export type PrizeCategory = {
+  id: string;
   slug: string;
   name: string;
 };
@@ -39,6 +40,7 @@ export type PrizeCateogry = {
 export type PrizeItem = {
   itemImage: {
     node: {
+      id: string;
       sourceUrl: string;
       altText: string;
     };

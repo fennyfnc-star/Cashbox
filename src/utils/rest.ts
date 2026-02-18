@@ -10,6 +10,7 @@ class WPRestClient {
     this.baseURL = "https://cashbox.com.au/wp-json";
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
+      withCredentials: true,
     });
 
     this.axiosInstance.interceptors.request.use((config) => {
@@ -23,13 +24,6 @@ class WPRestClient {
   //   ============== METHODS =====================
 
   async CreatePrizeDrawItem(item: CreatePrizeDrawProps) {
-    function decodeGraphQLId(base64Id: string): number {
-      // Decode Base64 to string
-      const decoded = atob(base64Id); // e.g., "term:666"
-      // Extract numeric part
-      const numericId = parseInt(decoded.split(":")[1], 10);
-      return numericId;
-    }
     try {
       const response = await this.axiosInstance.post("/wp/v2/prize_draw", {
         title: item.title,
@@ -48,6 +42,52 @@ class WPRestClient {
       return response.data;
     } catch (err) {
       console.error("Failed to create prize item:", err);
+      throw err;
+    }
+  }
+
+  async DeletePrizeDrawItem(item_id: string) {
+    try {
+      await this.axiosInstance.delete(
+        `/wp/v2/prize_draw/${decodeGraphQLId(item_id)}`,
+      );
+    } catch (err) {
+      console.error("Failed to delete prize item:", err);
+      throw err;
+    }
+  }
+
+  async UpdatePrizeDrawItem(item: CreatePrizeDrawProps) {
+    if (!item.id) throw new Error("no item id set!");
+
+    try {
+      const payload = {
+        title: item.title,
+        status: "publish",
+        acf: {
+          item_name: item.title,
+          item_description: item.itemDescription,
+          item_status: item.itemStatus,
+          price: item.price,
+          tickets: item.tickets,
+        },
+        prize_category: [decodeGraphQLId(item.itemCategory)],
+      };
+
+      if (item.mediaIds && item.mediaIds.length > 0) {
+        // @ts-ignore
+        payload.acf["item_image"] = item.mediaIds[0];
+      }
+
+      const response = await this.axiosInstance.patch(
+        `/wp/v2/prize_draw/${decodeGraphQLId(item.id)}`,
+        payload,
+      );
+
+      console.log("Updated prize item via REST:", response.data);
+      return response.data;
+    } catch (err) {
+      console.error("Failed to update prize item:", err);
       throw err;
     }
   }
@@ -120,3 +160,11 @@ class WPRestClient {
 }
 
 export const wprest = new WPRestClient();
+
+function decodeGraphQLId(base64Id: string): number {
+  // Decode Base64 to string
+  const decoded = atob(base64Id); // e.g., "term:666"
+  // Extract numeric part
+  const numericId = parseInt(decoded.split(":")[1], 10);
+  return numericId;
+}

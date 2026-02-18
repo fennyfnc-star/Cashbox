@@ -1,9 +1,9 @@
-import Modal from "./Modal";
+import Modal from "@/modals/Modal";
 import "@/styles/loaders.css";
 import { BiPauseCircle, BiPencil, BiTrash } from "react-icons/bi";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
-import Button from "./Button";
+import Button from "@/components/Button";
 import { RxLightningBolt } from "react-icons/rx";
 import type { ModalProps } from "../types/modal";
 import itemImage from "@/assets/images/plane.jpg";
@@ -13,12 +13,17 @@ import { useEffect, useState } from "react";
 import { wpgraphql } from "@/utils/graphql";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import Swal from "sweetalert2";
+import { wprest } from "@/utils/rest";
 
 const ItemModal = ({
   open,
   setOpen,
+  setEditOpen,
   item,
-}: ModalProps & { item: PrizeDrawNode }) => {
+}: ModalProps & {
+  item: PrizeDrawNode;
+  setEditOpen: (open: boolean) => void;
+}) => {
   const [drawItem, setDrawItem] = useState(item);
   const prizeStore = usePrizeDrawStore();
   const [loading, setLoading] = useState(false);
@@ -27,8 +32,8 @@ const ItemModal = ({
   const imgUrl = details?.itemImage?.node.sourceUrl;
 
   useEffect(() => {
-    setDrawItem(item)
-  }, [item])
+    setDrawItem(item);
+  }, [item]);
 
   const changeItemStatus = async (isLive: boolean) => {
     setLoading(true);
@@ -66,7 +71,7 @@ const ItemModal = ({
       if (result.isConfirmed) {
         setLoading(true);
         try {
-          const response = await wpgraphql.DeletePrizeDrawItem(item.id);
+          const response = await wprest.DeletePrizeDrawItem(item.id);
 
           console.log("delete response", response);
           Swal.fire({
@@ -195,7 +200,13 @@ const ItemModal = ({
           <BiPauseCircle />
           <span>Suspend</span>
         </Button>
-        <Button className="bg-amber-500 text-white">
+        <Button
+          className="bg-amber-500 text-white"
+          onClick={() => {
+            setOpen(false);
+            setEditOpen(true);
+          }}
+        >
           <BiPencil />
           <span>Edit Details</span>
         </Button>

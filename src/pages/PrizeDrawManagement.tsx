@@ -1,23 +1,26 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { FiPlus } from "react-icons/fi";
-import ItemModal from "@/components/ItemModal";
-import AddItemModal from "@/components/AddItemModal";
+import ItemModal from "@/modals/ItemModal";
+import AddItemModal from "@/modals/AddItemModal";
 import itemImage from "@/assets/images/plane.jpg";
 import type { PrizeDrawNode } from "@/types/graphql";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import { useLocation, useSearchParams } from "react-router-dom";
 import CircleLoader from "@/components/CircleLoader";
+import EditItemModal from "@/modals/EditItemModal";
 
 const PrizeDrawManagement = () => {
   const [open, setOpen] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedItem, setSeletecItem] = useState<PrizeDrawNode | undefined>();
   const location = useLocation();
   const [searchParams, _] = useSearchParams();
 
   const prizeStore = usePrizeDrawStore();
+
+  const itemSelected = useRef<PrizeDrawNode | undefined>(undefined);
 
   useEffect(() => {
     async function fetchItems() {
@@ -34,7 +37,7 @@ const PrizeDrawManagement = () => {
 
   const openItemModal = (item: PrizeDrawNode) => {
     console.log("selected Item: ", item);
-    setSeletecItem(item);
+    itemSelected.current = item;
     setOpen(true);
   };
 
@@ -42,8 +45,21 @@ const PrizeDrawManagement = () => {
     <MainLayout>
       <AddItemModal open={openAdd} setOpen={setOpenAdd} />
 
-      {selectedItem && (
-        <ItemModal open={open} setOpen={setOpen} item={selectedItem} />
+      {itemSelected.current && (
+        <EditItemModal
+          open={openEdit}
+          setOpen={setOpenEdit}
+          item={itemSelected.current}
+        />
+      )}
+
+      {itemSelected.current && (
+        <ItemModal
+          open={open}
+          setOpen={setOpen}
+          setEditOpen={setOpenEdit}
+          item={itemSelected.current}
+        />
       )}
       <div className="flex flex-col gap-6 p-6">
         <div className="flex flex-col md:flex-row gap-4 pb-6 border-b border-neutral-200 bg-white sticky top-0 pt-6 -mt-8 justify-between w-full">

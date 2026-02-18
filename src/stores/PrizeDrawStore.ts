@@ -1,4 +1,4 @@
-import type { PrizeCateogry, PrizeDrawNode } from "@/types/graphql";
+import type { PrizeCategory, PrizeDrawNode } from "@/types/graphql";
 import { wpgraphql } from "@/utils/graphql";
 import { create } from "zustand";
 
@@ -6,7 +6,7 @@ interface PrizeDrawStore {
   drawItems: PrizeDrawNode[];
   setDrawItems: (items: PrizeDrawNode[]) => void;
   updateDrawItems: (category?: null | string) => Promise<void>;
-  categories: PrizeCateogry[];
+  categories: PrizeCategory[];
   updatePrizeCategories: () => void;
 }
 

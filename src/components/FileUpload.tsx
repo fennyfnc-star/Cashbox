@@ -70,18 +70,18 @@ export default function FileUploadPrime({
     }
   };
 
-  const onSelect = (e: FileUploadSelectEvent) => {
-    const newFiles = e.files as File[];
+  const onSelect = async (e: FileUploadSelectEvent) => {
+    const file = e.files[0] as File; // only one file allowed
 
-    // Filter out files that are already in selectedFiles
-    const filesToUpload = newFiles.filter((f) => !selectedFiles.includes(f));
+    setMediaIds([]); // reset old mediaId, will be set after upload
 
-    // Add them to state
-    setSelectedFiles((prev) => [...prev, ...filesToUpload]);
+    // Immediately upload the new file
+    await handleFileUpload(file);
+    // Replace any previously selected file
+    setSelectedFiles([file]);
 
-    // Upload only the new files
-    filesToUpload.forEach((file) => handleFileUpload(file));
-    onTemplateSelect(e);
+    // Update total size for UI
+    setTotalSize(file.size || 0);
   };
 
   const onTemplateSelect = (e: FileUploadSelectEvent) => {
@@ -116,7 +116,8 @@ export default function FileUploadPrime({
     index: number,
   ) => {
     // Update total size
-    setTotalSize((prev) => prev - (file.size || 0));
+    // setTotalSize((prev) => prev - (file.size || 0));
+    setTotalSize(0); // update to zero since only supports 1 image
 
     // Remove from local state
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
@@ -154,7 +155,7 @@ export default function FileUploadPrime({
       >
         {chooseButton}
         {/* {uploadButton} */}
-        {cancelButton}
+        {/* {cancelButton} */}
         <div className="flex items-center gap-3 ml-auto">
           <span className="text-xs">
             {formatedValue} / {size} MB
@@ -171,7 +172,13 @@ export default function FileUploadPrime({
 
   const itemTemplate = (inFile: object, props: ItemTemplateOptions) => {
     const typedFile = inFile as File & { objectURL?: string };
-    const index = selectedFiles.indexOf(typedFile);
+
+    // Check if this file has a mediaId (i.e., upload completed)
+    const isUploaded = mediaIds.length > 0 && selectedFiles[0] === typedFile;
+    if (!isUploaded)
+      return (
+        <div className="p-8 flex items-center justify-center">Uploading...</div>
+      ); // hide if still uploading
 
     return (
       <div className="flex items-center justify-between p-2">
@@ -191,7 +198,7 @@ export default function FileUploadPrime({
             icon="pi pi-times"
             className="p-button-rounded p-button-danger p-button-outlined"
             onClick={(e) => {
-              onTemplateRemove(typedFile, () => props.onRemove?.(e), index);
+              onTemplateRemove(typedFile, () => props.onRemove?.(e), 0); // index 0 in single-file mode
             }}
           />
         </div>
@@ -275,10 +282,10 @@ export default function FileUploadPrime({
       <FileUpload
         ref={fileUploadRef}
         name="files[]"
-        multiple={maxFiles > 1}
+        multiple={false} // only one file
         accept="image/*"
         customUpload
-        maxFileSize={1_000_000} 
+        maxFileSize={1_000_000}
         onUpload={onTemplateUpload}
         onError={onTemplateClear}
         chooseOptions={chooseOptions}
@@ -287,6 +294,12 @@ export default function FileUploadPrime({
         uploadHandler={async (e: FileUploadHandlerEvent) => {
           const file = e.files[0] as File;
           await handleFileUpload(file);
+        }}
+        onRemove={() => {
+          setMediaIds([]);
+          setSelectedFiles([]);
+          onFileRemove?.(0); // index 0 since only one file
+          onUploadComplete?.([]);
         }}
         onSelect={onSelect}
         onClear={() => {

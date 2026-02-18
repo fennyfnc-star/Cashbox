@@ -1,12 +1,12 @@
 import Modal from "./Modal";
 import { BiPencil } from "react-icons/bi";
 import { IoClose } from "react-icons/io5";
-import Button from "./Button";
+import Button from "../components/Button";
 import type { ModalProps } from "../types/modal";
 import "@/styles/addItem.css";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
-import FileUploadPrime from "./FileUpload";
-import RichTextEditor from "./RichTextEditor";
+import FileUploadPrime from "../components/FileUpload";
+import RichTextEditor from "../components/RichTextEditor";
 import { InputSwitch } from "primereact/inputswitch";
 import { useEffect, useState, type HTMLAttributes } from "react";
 import type { CreatePrizeDrawProps } from "@/types/graphql";
@@ -49,7 +49,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
 
     setLoading(true);
     try {
-      const response = await wprest.CreatePrizeDrawItem(item);
+      const response = await wprest.UpdatePrizeDrawItem(item);
       console.log(response);
 
       await prizeStore.updateDrawItems();

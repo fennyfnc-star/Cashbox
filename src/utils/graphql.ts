@@ -32,10 +32,20 @@ class WPGraphQLClient {
     }
   }
 
+  async UploadMediaFile(file: File) {
+    try {
+      await this.refreshAccessToken();
+      const data = await this.client.request(UPLOAD_MEDIA_FILE, file);
+      console.log(data);
+    } catch (error) {
+      console.error("Error on file upload: ", error);
+      this.accessToken = null;
+    }
+  }
+
   async fetchPrizeDraws(): Promise<PrizeDrawNode[]> {
     await this.refreshAccessToken();
     const data = await this.client.request(GET_PRIZE_DRAWS);
-    console.log(data);
 
     return data["prizeDraws"]["nodes"];
   }
@@ -159,7 +169,6 @@ class WPGraphQLClient {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    console.log(accessToken);
     this.accessToken = accessToken;
   }
 }
@@ -275,6 +284,20 @@ const CREATE_PRIZE_DRAW = gql`
           price
           tickets
         }
+      }
+    }
+  }
+`;
+
+const UPLOAD_MEDIA_FILE = gql`
+  mutation UploadFile($file: Upload!) {
+    uploadFile(input: { file: $file }) {
+      mediaItem {
+        id
+        databaseId
+        sourceUrl
+        mediaType
+        mimeType
       }
     }
   }

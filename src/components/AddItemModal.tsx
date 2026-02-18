@@ -8,15 +8,16 @@ import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import FileUploadPrime from "./FileUpload";
 import RichTextEditor from "./RichTextEditor";
 import { InputSwitch } from "primereact/inputswitch";
-import { useState, type HTMLAttributes } from "react";
+import { useEffect, useState, type HTMLAttributes } from "react";
 import type { CreatePrizeDrawProps } from "@/types/graphql";
-import { wpgraphql } from "@/utils/graphql";
 import Swal from "sweetalert2";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
+import { wprest } from "@/utils/rest";
 
 const AddItemModal = ({ open, setOpen }: ModalProps) => {
   const prizeStore = usePrizeDrawStore();
   const [loading, setLoading] = useState(false);
+  const [uploadedMediaIds, setUploadedMediaIds] = useState<number[]>([]);
 
   // ========== Form Fields States ============
   const {
@@ -31,11 +32,26 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
     reValidateMode: "onBlur",
   });
 
+  useEffect(() => {
+    console.log("USEFFECT UPLOADMEDIAIDS: ", uploadedMediaIds);
+  }, [uploadedMediaIds]);
+
   const createPrizeItem: SubmitHandler<CreatePrizeDrawProps> = async (item) => {
+    console.log("UPLOADMEDIAIDS: ", uploadedMediaIds);
+    if (uploadedMediaIds.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Upload Required",
+        text: "Please upload at least one image before submitting!",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await wpgraphql.CreatePrizeDrawItem(item);
+      const response = await wprest.CreatePrizeDrawItem(item);
       console.log(response);
+
       await prizeStore.updateDrawItems();
       Swal.fire({
         icon: "success",
@@ -108,9 +124,29 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
               className="input-field"
             />
           </InputField>
-          <div className="px-12">
-            <FileUploadPrime />
-          </div>
+          <Controller
+            name="mediaIds"
+            control={control}
+            rules={{
+              required: "Please upload at least one image",
+            }}
+            render={({ field }) => (
+              <FileUploadPrime
+                maxFiles={1}
+                onUploadComplete={(ids: number[]) => {
+                  field.onChange(ids); // <-- update RHF state
+                  setUploadedMediaIds(ids); // optional if you still want local state
+                }}
+                onFileRemove={(index: number) => {
+                  const updatedIds = (field.value || []).filter(
+                    (_: number, i: number) => i !== index,
+                  );
+                  field.onChange(updatedIds);
+                  setUploadedMediaIds(updatedIds);
+                }}
+              />
+            )}
+          />
 
           <InputField label="Description" field="itemDescription">
             <Controller
@@ -184,7 +220,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
           </div>
         </div>
         <hr className="w-full border-b border-slate-100" />
-        <div className="px-8 py-5 flex gap-4 bg-orange-200 justify-end">
+        <div className="px-8 py-5 flex gap-4 bg-orange-100 justify-end">
           <Button className="bg-white font-bold">
             <BiPencil />
             <span>Save Draft</span>

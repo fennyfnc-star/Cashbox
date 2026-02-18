@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Toast } from "primereact/toast";
 import {
   FileUpload,
+  type FileUploadHandlerEvent,
   type FileUploadHeaderTemplateOptions,
   type FileUploadSelectEvent,
   type FileUploadUploadEvent,
@@ -12,11 +13,76 @@ import { Button } from "primereact/button";
 import { Tooltip } from "primereact/tooltip";
 import { Tag } from "primereact/tag";
 import { IoCloudUploadOutline } from "react-icons/io5";
+import { wprest } from "@/utils/rest";
 
-export default function FileUploadPrime() {
+interface Props {
+  onUploadComplete?: (mediaIds: number[]) => void;
+  onFileRemove?: (index: number) => void;
+  maxFiles?: number;
+}
+
+export default function FileUploadPrime({
+  onUploadComplete,
+  onFileRemove,
+  maxFiles = 5,
+}: Props) {
   const toast = useRef<Toast>(null);
   const [totalSize, setTotalSize] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [mediaIds, setMediaIds] = useState<number[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
   const fileUploadRef = useRef<FileUpload>(null);
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const media = await wprest.uploadMedia(file);
+
+      setMediaIds((prev) => {
+        const updated = [...prev, media.id];
+        setTimeout(() => onUploadComplete?.(updated), 0);
+        return updated;
+      });
+
+      toast.current?.show({
+        severity: "success",
+        summary: "Uploaded",
+        detail: file.name,
+      });
+    } catch (err) {
+      console.error(err);
+      toast.current?.show({
+        severity: "error",
+        summary: "Upload Failed",
+        detail: file.name,
+      });
+
+      // Remove failed file from selectedFiles
+      setSelectedFiles((prev) => prev.filter((f) => f !== file));
+
+      // Remove from mediaIds if added (precaution)
+      setMediaIds((prev) =>
+        prev.filter((id, idx) => selectedFiles[idx] !== file),
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onSelect = (e: FileUploadSelectEvent) => {
+    const newFiles = e.files as File[];
+
+    // Filter out files that are already in selectedFiles
+    const filesToUpload = newFiles.filter((f) => !selectedFiles.includes(f));
+
+    // Add them to state
+    setSelectedFiles((prev) => [...prev, ...filesToUpload]);
+
+    // Upload only the new files
+    filesToUpload.forEach((file) => handleFileUpload(file));
+    onTemplateSelect(e);
+  };
 
   const onTemplateSelect = (e: FileUploadSelectEvent) => {
     let _totalSize = totalSize;
@@ -44,9 +110,24 @@ export default function FileUploadPrime() {
     });
   };
 
-  const onTemplateRemove = (file: File, callback: Function) => {
-    setTotalSize(totalSize - file.size);
-    callback();
+  const onTemplateRemove = (
+    file: File,
+    removeCallback: () => void,
+    index: number,
+  ) => {
+    // Update total size
+    setTotalSize((prev) => prev - (file.size || 0));
+
+    // Remove from local state
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setMediaIds((prev) => prev.filter((_, i) => i !== index));
+
+    // Call parent callback
+    onFileRemove?.(index);
+    onUploadComplete?.(mediaIds);
+
+    // Remove from PrimeReact UI
+    removeCallback();
   };
 
   const onTemplateClear = () => {
@@ -56,7 +137,7 @@ export default function FileUploadPrime() {
   const headerTemplate = (options: FileUploadHeaderTemplateOptions) => {
     const size = 1;
     const { className, chooseButton, uploadButton, cancelButton } = options;
-    const value = totalSize / (size * 10000);
+    const value = totalSize ? (totalSize / (size * 1000000)) * 100 : 0;
     const formatedValue =
       fileUploadRef && fileUploadRef.current
         ? fileUploadRef.current.formatSize(totalSize)
@@ -72,7 +153,7 @@ export default function FileUploadPrime() {
         }}
       >
         {chooseButton}
-        {uploadButton}
+        {/* {uploadButton} */}
         {cancelButton}
         <div className="flex items-center gap-3 ml-auto">
           <span className="text-xs">
@@ -89,32 +170,29 @@ export default function FileUploadPrime() {
   };
 
   const itemTemplate = (inFile: object, props: ItemTemplateOptions) => {
-    const file = inFile as File & { objectURL: string };
+    const typedFile = inFile as File & { objectURL?: string };
+    const index = selectedFiles.indexOf(typedFile);
+
     return (
-      <div className="flex items-center justify-between h-16! p-0!">
-        <div className="flex-1 flex">
-          <img
-            alt={file.name}
-            role="presentation"
-            src={file.objectURL}
-            width={50}
-          />
-          <span className="flex flex-col w-[50%] text-left ml-3">
-            <span className="text-xs">{file.name}</span>
-            <span className="text-xs">{new Date().toLocaleDateString()}</span>
-          </span>
+      <div className="flex items-center justify-between p-2">
+        <div className="flex-1 flex items-center gap-2">
+          {typedFile.objectURL && (
+            <img src={typedFile.objectURL} alt={typedFile.name} width={50} />
+          )}
+          <span className="text-xs">{typedFile.name}</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Tag
-            value={props.formatSize}
+            value={`${(typedFile.size / 1024).toFixed(1)} KB`}
             severity="warning"
-            className="px-3 py-2 bg-transparent! text-neutral-500!"
           />
           <Button
             type="button"
             icon="pi pi-times"
-            className="p-button-outlined p-button-rounded p-button-danger ml-auto"
-            onClick={() => onTemplateRemove(file, props.onRemove)}
+            className="p-button-rounded p-button-danger p-button-outlined"
+            onClick={(e) => {
+              onTemplateRemove(typedFile, () => props.onRemove?.(e), index);
+            }}
           />
         </div>
       </div>
@@ -123,7 +201,7 @@ export default function FileUploadPrime() {
 
   const emptyTemplate = () => {
     return (
-      <div className="flex items-center justify-center flex-col">
+      <div className="flex items-center justify-center flex-col py-4">
         <IoCloudUploadOutline size={32} />
         <span className="text-xs">Drag and Drop Image Here</span>
       </div>
@@ -156,15 +234,34 @@ export default function FileUploadPrime() {
       <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
       <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
 
-      <FileUpload
+      {/* <FileUpload
         ref={fileUploadRef}
         name="demo[]"
-        url="/api/upload"
-        multiple
+        multiple={false}
         accept="image/*"
+        uploadHandler={(event) => {
+          const file = event.files[0];
+
+          if (onFileSelect) {
+            onFileSelect(file); // 🔥 send to parent (react-hook-form)
+          }
+
+          toast.current?.show({
+            severity: "success",
+            summary: "Selected",
+            detail: "File ready for upload",
+          });
+        }}
+        onSelect={(e) => {
+          onTemplateSelect(e);
+
+          const file = e.files[0];
+          if (onFileSelect) {
+            onFileSelect(file); // also capture here
+          }
+        }}
         maxFileSize={1000000}
-        onUpload={onTemplateUpload}
-        onSelect={onTemplateSelect}
+        // onUpload={onTemplateUpload}
         onError={onTemplateClear}
         onClear={onTemplateClear}
         headerTemplate={headerTemplate}
@@ -173,6 +270,33 @@ export default function FileUploadPrime() {
         chooseOptions={chooseOptions}
         uploadOptions={uploadOptions}
         cancelOptions={cancelOptions}
+      /> */}
+
+      <FileUpload
+        ref={fileUploadRef}
+        name="files[]"
+        multiple={maxFiles > 1}
+        accept="image/*"
+        customUpload
+        maxFileSize={1_000_000} 
+        onUpload={onTemplateUpload}
+        onError={onTemplateClear}
+        chooseOptions={chooseOptions}
+        uploadOptions={uploadOptions}
+        cancelOptions={cancelOptions}
+        uploadHandler={async (e: FileUploadHandlerEvent) => {
+          const file = e.files[0] as File;
+          await handleFileUpload(file);
+        }}
+        onSelect={onSelect}
+        onClear={() => {
+          onTemplateClear();
+          setMediaIds([]);
+          onUploadComplete?.([]);
+        }}
+        headerTemplate={headerTemplate}
+        itemTemplate={itemTemplate}
+        emptyTemplate={emptyTemplate}
       />
     </div>
   );

@@ -3,17 +3,36 @@
   padding: 0.5rem 1rem;
   border: 1px solid oklch(87% 0 0);
   outline: none;
-  transition: border .3s ease-out;
+  transition: border 0.3s ease-out;
+}
+
+.p-fileupload {
+  margin: 0 50px;
+}
+
+.p-fileupload-content{
+  padding: 4px;
 }
 
 .input-field input {
   flex-grow: 1;
 }
 
-.input-field:focus{
+.input-field:focus {
   border-color: var(--color-orange-400);
 }
 
-.input-field input:focus{
+.input-field input:focus {
   border-color: var(--color-orange-400);
+}
+
+.ql-toolbar {
+  background-color: var(--color-orange-100);
+}
+
+.ql-container {
+  border-radius: 0 0 8px 8px;
+}
+.p-inputswitch.p-highlight .p-inputswitch-slider {
+    background: var(--color-orange-300);
 }

@@ -21,28 +21,6 @@ class WPGraphQLClient {
 
   // ================== METHODS =====================
 
-  async CreatePrizeDrawItem(item: CreatePrizeDrawProps) {
-    try {
-      await this.refreshAccessToken();
-      const data = await this.client.request(CREATE_PRIZE_DRAW, item);
-      console.log(data);
-    } catch (error: any) {
-      console.error("Error create prize item: ", error);
-      this.accessToken = null;
-    }
-  }
-
-  async UploadMediaFile(file: File) {
-    try {
-      await this.refreshAccessToken();
-      const data = await this.client.request(UPLOAD_MEDIA_FILE, file);
-      console.log(data);
-    } catch (error) {
-      console.error("Error on file upload: ", error);
-      this.accessToken = null;
-    }
-  }
-
   async fetchPrizeDraws(): Promise<PrizeDrawNode[]> {
     await this.refreshAccessToken();
     const data = await this.client.request(GET_PRIZE_DRAWS);
@@ -200,6 +178,7 @@ const GET_PRIZE_DRAWS = gql`
           itemDescription
           itemStatus
           price
+          stock
           tickets
         }
       }
@@ -255,52 +234,3 @@ const GET_PRICE_CATEGORIES = gql`
 //   }
 // `;
 
-const CREATE_PRIZE_DRAW = gql`
-  mutation CreatePrizeDraw(
-    $title: String!
-    $itemDescription: String
-    $itemStatus: Boolean
-    $price: Float
-    $tickets: Int
-    $itemCategory: String
-  ) {
-    createPrizeDraw(
-      input: {
-        title: $title
-        status: PUBLISH
-        prizeItemsManagement: {
-          itemDescription: $itemDescription
-          itemStatus: $itemStatus
-          price: $price
-          tickets: $tickets
-        }
-        prizeCategories: { nodes: { name: $itemCategory } }
-      }
-    ) {
-      prizeDraw {
-        id
-        title
-        prizeItemsManagement {
-          itemDescription
-          itemStatus
-          price
-          tickets
-        }
-      }
-    }
-  }
-`;
-
-const UPLOAD_MEDIA_FILE = gql`
-  mutation UploadFile($file: Upload!) {
-    uploadFile(input: { file: $file }) {
-      mediaItem {
-        id
-        databaseId
-        sourceUrl
-        mediaType
-        mimeType
-      }
-    }
-  }
-`;

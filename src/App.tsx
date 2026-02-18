@@ -2,7 +2,7 @@ import { HashRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "@/pages/Dashboard";
 import PrizeDrawManagement from "@/pages/PrizeDrawManagement";
 import { useEffect } from "react";
-import { wprest } from "./utils/rest";
+import { wprest } from "./utils/wprest";
 
 const App: React.FC = () => {
   useEffect(() => {

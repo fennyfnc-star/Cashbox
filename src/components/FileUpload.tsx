@@ -13,7 +13,7 @@ import { Button } from "primereact/button";
 import { Tooltip } from "primereact/tooltip";
 import { Tag } from "primereact/tag";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import { wprest } from "@/utils/rest";
+import { wprest } from "@/utils/wprest";
 
 interface Props {
   onUploadComplete?: (mediaIds: number[]) => void;

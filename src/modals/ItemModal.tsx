@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { wpgraphql } from "@/utils/graphql";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import Swal from "sweetalert2";
-import { wprest } from "@/utils/rest";
+import { wprest } from "@/utils/wprest";
 
 const ItemModal = ({
   open,
@@ -176,6 +176,15 @@ const ItemModal = ({
               </span>
               <span className=" font-bold text-2xl">
                 {new Intl.NumberFormat().format(Number(details.tickets))}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="uppercase text-xs text-neutral-400 font-semibold">
+                Stock
+              </span>
+              <span className=" font-bold text-2xl">
+                {/* {new Intl.NumberFormat().format(Number(details.stock))} */}
+                {details.stock || (<span className="text-neutral-400"> None</span>)}
               </span>
             </div>
           </div>

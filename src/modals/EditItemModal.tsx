@@ -12,7 +12,7 @@ import { useEffect, useState, type HTMLAttributes } from "react";
 import type { CreatePrizeDrawProps, PrizeDrawNode } from "@/types/graphql";
 import Swal from "sweetalert2";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
-import { wprest } from "@/utils/rest";
+import { wprest } from "@/utils/wprest";
 
 const EditItemModal = ({
   open,
@@ -32,7 +32,7 @@ const EditItemModal = ({
     reset,
     formState: { errors },
   } = useForm<CreatePrizeDrawProps>({
-    mode: "onTouched",
+    mode: "onBlur",
     reValidateMode: "onBlur",
   });
 
@@ -43,6 +43,7 @@ const EditItemModal = ({
       reset({
         id: item.id,
         title: item.title,
+        stock: item.prizeItemsManagement.stock,
         itemCategory: item.prizeCategories.nodes[0]?.id || undefined,
         itemDescription: item.prizeItemsManagement.itemDescription || "",
         price: item.prizeItemsManagement.price || 0,
@@ -186,10 +187,22 @@ const EditItemModal = ({
                 />
               </div>
             </InputField>
-            <div className="flex gap-2 flex-col flex-1">
-              <span className="font-medium">Stock Quantity</span>
-              <input type="number" className="input-field " />
-            </div>
+            <InputField
+              label="Stock Quantity"
+              field="stock"
+              className="flex-1 flex-col flex gap-2 relative"
+            >
+              <div className="flex gap-2 flex-col flex-1">
+                <input
+                  type="number"
+                  className="input-field "
+                  {...register("stock", {
+                    required: true,
+                    valueAsNumber: true,
+                  })}
+                />
+              </div>
+            </InputField>
           </div>
           <div className="px-2">
             <InputField label="Amounts of Tickets Required" field="tickets">

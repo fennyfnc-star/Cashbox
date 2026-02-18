@@ -12,7 +12,7 @@ import { useEffect, useState, type HTMLAttributes } from "react";
 import type { CreatePrizeDrawProps } from "@/types/graphql";
 import Swal from "sweetalert2";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
-import { wprest } from "@/utils/rest";
+import { wprest } from "@/utils/wprest";
 
 const AddItemModal = ({ open, setOpen }: ModalProps) => {
   const prizeStore = usePrizeDrawStore();
@@ -28,8 +28,8 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
     reset,
     formState: { errors },
   } = useForm<CreatePrizeDrawProps>({
-    mode: "onTouched",
-    reValidateMode: "onBlur",
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   });
 
   useEffect(() => {
@@ -49,7 +49,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
 
     setLoading(true);
     try {
-      const response = await wprest.UpdatePrizeDrawItem(item);
+      const response = await wprest.CreatePrizeDrawItem(item);
       console.log(response);
 
       await prizeStore.updateDrawItems();
@@ -181,10 +181,22 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
                 />
               </div>
             </InputField>
-            <div className="flex gap-2 flex-col flex-1">
-              <span className="font-medium">Stock Quantity</span>
-              <input type="number" className="input-field " />
-            </div>
+            <InputField
+              label="Stock Quantity"
+              field="stock"
+              className="flex-1 flex-col flex gap-2 relative"
+            >
+              <div className="flex gap-2 flex-col flex-1">
+                <input
+                  type="number"
+                  className="input-field "
+                  {...register("stock", {
+                    required: true,
+                    valueAsNumber: true,
+                  })}
+                />
+              </div>
+            </InputField>
           </div>
           <div className="px-2">
             <InputField label="Amounts of Tickets Required" field="tickets">

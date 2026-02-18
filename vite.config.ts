@@ -24,6 +24,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: true, // Use false if your local WP is HTTP, not HTTPS
       },
+      "/wp-json": {
+        target: "https://cashbox.com.au",
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
 });

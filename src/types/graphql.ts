@@ -31,6 +31,7 @@ export type CreatePrizeDrawProps = {
 };
 
 export type PrizeCateogry = {
+  id: number;
   slug: string;
   name: string;
 };

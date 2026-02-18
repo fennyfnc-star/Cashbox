@@ -23,6 +23,13 @@ class WPRestClient {
   //   ============== METHODS =====================
 
   async CreatePrizeDrawItem(item: CreatePrizeDrawProps) {
+    function decodeGraphQLId(base64Id: string): number {
+      // Decode Base64 to string
+      const decoded = atob(base64Id); // e.g., "term:666"
+      // Extract numeric part
+      const numericId = parseInt(decoded.split(":")[1], 10);
+      return numericId;
+    }
     try {
       const response = await this.axiosInstance.post("/wp/v2/prize_draw", {
         title: item.title,
@@ -35,6 +42,7 @@ class WPRestClient {
           price: item.price,
           tickets: item.tickets,
         },
+        prize_category: [decodeGraphQLId(item.itemCategory)],
       });
       console.log("Created prize item via REST:", response.data);
       return response.data;

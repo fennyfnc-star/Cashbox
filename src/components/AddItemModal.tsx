@@ -111,7 +111,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
                 -- Select Category --
               </option>
               {prizeStore.categories.map((val, idx) => (
-                <option key={`${val.slug}-${idx}`} value={val.name}>
+                <option key={`${val.slug}-${idx}`} value={val.id}>
                   {val.name}
                 </option>
               ))}

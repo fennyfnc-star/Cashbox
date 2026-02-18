@@ -21,7 +21,7 @@ const EditItemModal = ({
 }: ModalProps & { item: PrizeDrawNode }) => {
   const prizeStore = usePrizeDrawStore();
   const [loading, setLoading] = useState(false);
-  const [uploadedMediaIds, setUploadedMediaIds] = useState<number[]>([]);
+  const [_, setUploadedMediaIds] = useState<number[]>([]);
 
   // ========== Form Fields States ============
   const {
@@ -137,7 +137,6 @@ const EditItemModal = ({
             control={control}
             render={({ field }) => (
               <FileUploadPrime
-                maxFiles={1}
                 onUploadComplete={(ids: number[]) => {
                   field.onChange(ids); // <-- update RHF state
                   setUploadedMediaIds(ids); // optional if you still want local state

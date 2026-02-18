@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MainLayout from "@/layouts/MainLayout";
 import { FiPlus } from "react-icons/fi";
 import ItemModal from "@/modals/ItemModal";

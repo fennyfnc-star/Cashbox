@@ -18,17 +18,15 @@ import { wprest } from "@/utils/rest";
 interface Props {
   onUploadComplete?: (mediaIds: number[]) => void;
   onFileRemove?: (index: number) => void;
-  maxFiles?: number;
 }
 
 export default function FileUploadPrime({
   onUploadComplete,
   onFileRemove,
-  maxFiles = 5,
 }: Props) {
   const toast = useRef<Toast>(null);
   const [totalSize, setTotalSize] = useState(0);
-  const [uploading, setUploading] = useState(false);
+  const [_, setUploading] = useState(false);
   const [mediaIds, setMediaIds] = useState<number[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -63,7 +61,7 @@ export default function FileUploadPrime({
 
       // Remove from mediaIds if added (precaution)
       setMediaIds((prev) =>
-        prev.filter((id, idx) => selectedFiles[idx] !== file),
+        prev.filter((_, idx) => selectedFiles[idx] !== file),
       );
     } finally {
       setUploading(false);
@@ -84,16 +82,16 @@ export default function FileUploadPrime({
     setTotalSize(file.size || 0);
   };
 
-  const onTemplateSelect = (e: FileUploadSelectEvent) => {
-    let _totalSize = totalSize;
-    let files = e.files;
+  // const onTemplateSelect = (e: FileUploadSelectEvent) => {
+  //   let _totalSize = totalSize;
+  //   let files = e.files;
 
-    for (let i = 0; i < files.length; i++) {
-      _totalSize += files[i].size || 0;
-    }
+  //   for (let i = 0; i < files.length; i++) {
+  //     _totalSize += files[i].size || 0;
+  //   }
 
-    setTotalSize(_totalSize);
-  };
+  //   setTotalSize(_totalSize);
+  // };
 
   const onTemplateUpload = (e: FileUploadUploadEvent) => {
     let _totalSize = 0;
@@ -115,6 +113,7 @@ export default function FileUploadPrime({
     removeCallback: () => void,
     index: number,
   ) => {
+    console.log(file);
     // Update total size
     // setTotalSize((prev) => prev - (file.size || 0));
     setTotalSize(0); // update to zero since only supports 1 image
@@ -137,7 +136,8 @@ export default function FileUploadPrime({
 
   const headerTemplate = (options: FileUploadHeaderTemplateOptions) => {
     const size = 1;
-    const { className, chooseButton, uploadButton, cancelButton } = options;
+    const { className, chooseButton } = options;
+    // const { className, chooseButton, uploadButton, cancelButton } = options;
     const value = totalSize ? (totalSize / (size * 1000000)) * 100 : 0;
     const formatedValue =
       fileUploadRef && fileUploadRef.current

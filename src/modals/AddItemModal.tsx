@@ -132,7 +132,6 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
             }}
             render={({ field }) => (
               <FileUploadPrime
-                maxFiles={1}
                 onUploadComplete={(ids: number[]) => {
                   field.onChange(ids); // <-- update RHF state
                   setUploadedMediaIds(ids); // optional if you still want local state

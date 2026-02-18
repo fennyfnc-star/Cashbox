@@ -1,5 +1,4 @@
 import type {
-  CreatePrizeDrawProps,
   PrizeCategoryProps,
   PrizeDrawNode,
 } from "@/types/graphql";

@@ -5,9 +5,9 @@ import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
 import Button from "@/components/Button";
 import { RxLightningBolt } from "react-icons/rx";
-import type { ModalProps } from "../types/modal";
+import type { ModalProps } from "../types/modal.types";
 import itemImage from "@/assets/images/plane.jpg";
-import type { PrizeDrawNode } from "@/types/graphql";
+import type { PrizeDrawNode } from "@/types/graphql.types";
 import { MdWarning } from "react-icons/md";
 import { useEffect, useState } from "react";
 import { wpgraphql } from "@/utils/graphql";
@@ -184,7 +184,9 @@ const ItemModal = ({
               </span>
               <span className=" font-bold text-2xl">
                 {/* {new Intl.NumberFormat().format(Number(details.stock))} */}
-                {details.stock || (<span className="text-neutral-400"> None</span>)}
+                {details.stock || (
+                  <span className="text-neutral-400"> None</span>
+                )}
               </span>
             </div>
           </div>

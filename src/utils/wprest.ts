@@ -1,4 +1,4 @@
-import type { CreatePrizeDrawProps } from "@/types/graphql";
+import type { CreatePrizeDrawProps } from "@/types/graphql.types";
 import axios, { type AxiosInstance } from "axios";
 
 class WPRestClient {
@@ -23,11 +23,14 @@ class WPRestClient {
 
   //   ============== METHODS =====================
 
-  async CreatePrizeDrawItem(item: CreatePrizeDrawProps) {
+  async CreatePrizeDrawItem(
+    item: CreatePrizeDrawProps,
+    status: "draft" | "publish" = "publish",
+  ) {
     try {
       const response = await this.axiosInstance.post("/wp/v2/prize_draw", {
         title: item.title,
-        status: "publish",
+        status: status,
         acf: {
           item_name: item.title,
           item_image: item.mediaIds[0] || null, // first image
@@ -58,13 +61,16 @@ class WPRestClient {
     }
   }
 
-  async UpdatePrizeDrawItem(item: CreatePrizeDrawProps) {
+  async UpdatePrizeDrawItem(
+    item: CreatePrizeDrawProps,
+    status: "draft" | "publish" = "publish",
+  ) {
     if (!item.id) throw new Error("no item id set!");
 
     try {
       const payload = {
         title: item.title,
-        status: "publish",
+        status: status,
         acf: {
           item_name: item.title,
           item_description: item.itemDescription,

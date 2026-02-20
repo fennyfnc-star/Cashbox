@@ -6,13 +6,10 @@
   transition: border 0.3s ease-out;
 }
 
-.p-fileupload {
-  margin: 0 50px;
+.p-fileupload-content {
+  padding: 0;
 }
 
-.p-fileupload-content{
-  padding: 4px;
-}
 
 .input-field input {
   flex-grow: 1;

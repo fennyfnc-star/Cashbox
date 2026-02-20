@@ -1,4 +1,4 @@
-import type { PrizeCategory, PrizeDrawNode } from "@/types/graphql";
+import type { PrizeCategory, PrizeDrawNode } from "@/types/graphql.types";
 import { wpgraphql } from "@/utils/graphql";
 import { create } from "zustand";
 

@@ -2,14 +2,17 @@ import Modal from "./Modal";
 import { BiPencil } from "react-icons/bi";
 import { IoClose } from "react-icons/io5";
 import Button from "../components/Button";
-import type { ModalProps } from "../types/modal";
+import type { ModalProps } from "../types/modal.types";
 import "@/styles/addItem.css";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import FileUploadPrime from "../components/FileUpload";
 import RichTextEditor from "../components/RichTextEditor";
 import { InputSwitch } from "primereact/inputswitch";
 import { useEffect, useState, type HTMLAttributes } from "react";
-import type { CreatePrizeDrawProps, PrizeDrawNode } from "@/types/graphql";
+import type {
+  CreatePrizeDrawProps,
+  PrizeDrawNode,
+} from "@/types/graphql.types";
 import Swal from "sweetalert2";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { wprest } from "@/utils/wprest";
@@ -22,6 +25,7 @@ const EditItemModal = ({
   const prizeStore = usePrizeDrawStore();
   const [loading, setLoading] = useState(false);
   const [_, setUploadedMediaIds] = useState<number[]>([]);
+  const [submitType, setSubmitType] = useState<"draft" | "publish">("publish");
 
   // ========== Form Fields States ============
   const {
@@ -56,7 +60,7 @@ const EditItemModal = ({
   const uploadPrizeItem: SubmitHandler<CreatePrizeDrawProps> = async (item) => {
     setLoading(true);
     try {
-      const response = await wprest.UpdatePrizeDrawItem(item);
+      const response = await wprest.UpdatePrizeDrawItem(item, submitType);
       console.log("UPDATE RESPONSE: ", response);
 
       await prizeStore.updateDrawItems();
@@ -106,6 +110,7 @@ const EditItemModal = ({
       <hr className="w-full border-b border-slate-100" />
 
       <form onSubmit={handleSubmit(uploadPrizeItem)}>
+        
         {/* ============== INPUT FIELDS =============== */}
         <div className="flex flex-col min-h-0 max-h-[70vh] pb-12 overflow-auto">
           <div className="relative flex gap-2 flex-col px-12 p-4 -mb-4">
@@ -133,25 +138,31 @@ const EditItemModal = ({
               className="input-field"
             />
           </InputField>
-          <Controller
-            name="mediaIds"
-            control={control}
-            render={({ field }) => (
-              <FileUploadPrime
-                onUploadComplete={(ids: number[]) => {
-                  field.onChange(ids); // <-- update RHF state
-                  setUploadedMediaIds(ids); // optional if you still want local state
-                }}
-                onFileRemove={(index: number) => {
-                  const updatedIds = (field.value || []).filter(
-                    (_: number, i: number) => i !== index,
-                  );
-                  field.onChange(updatedIds);
-                  setUploadedMediaIds(updatedIds);
-                }}
-              />
-            )}
-          />
+          <div className="grid grid-cols-[200px_1fr] px-14">
+            <img
+              src={item.prizeItemsManagement.itemImage?.node.sourceUrl}
+              className="h-40 w-40 object-contain object-center border rounded-xl border-orange-200"
+            />
+            <Controller
+              name="mediaIds"
+              control={control}
+              render={({ field }) => (
+                <FileUploadPrime
+                  onUploadComplete={(ids: number[]) => {
+                    field.onChange(ids); // <-- update RHF state
+                    setUploadedMediaIds(ids); // optional if you still want local state
+                  }}
+                  onFileRemove={(index: number) => {
+                    const updatedIds = (field.value || []).filter(
+                      (_: number, i: number) => i !== index,
+                    );
+                    field.onChange(updatedIds);
+                    setUploadedMediaIds(updatedIds);
+                  }}
+                />
+              )}
+            />
+          </div>
 
           <InputField label="Description" field="itemDescription">
             <Controller
@@ -178,6 +189,8 @@ const EditItemModal = ({
               <div className="flex gap-4 input-field">
                 <span className="font-bold">$</span>
                 <input
+                  min={1}
+                  step={0.1}
                   type="number"
                   {...register("price", {
                     required: true,
@@ -238,12 +251,17 @@ const EditItemModal = ({
         </div>
         <hr className="w-full border-b border-slate-100" />
         <div className="px-8 py-5 flex gap-4 bg-orange-100 justify-end">
-          <Button className="bg-white font-bold">
+          <Button
+            type="submit"
+            onClick={() => setSubmitType("draft")}
+            className="bg-white font-bold"
+          >
             <BiPencil />
             <span>Save Draft</span>
           </Button>
           <Button
             type="submit"
+            onClick={() => setSubmitType("publish")}
             className="bg-orange-400 text-white font-bold rounded"
           >
             <span>Update</span>

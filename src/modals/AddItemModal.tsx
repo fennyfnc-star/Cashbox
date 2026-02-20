@@ -2,14 +2,14 @@ import Modal from "./Modal";
 import { BiPencil } from "react-icons/bi";
 import { IoClose } from "react-icons/io5";
 import Button from "../components/Button";
-import type { ModalProps } from "../types/modal";
+import type { ModalProps } from "../types/modal.types";
 import "@/styles/addItem.css";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import FileUploadPrime from "../components/FileUpload";
 import RichTextEditor from "../components/RichTextEditor";
 import { InputSwitch } from "primereact/inputswitch";
 import { useEffect, useState, type HTMLAttributes } from "react";
-import type { CreatePrizeDrawProps } from "@/types/graphql";
+import type { CreatePrizeDrawProps } from "@/types/graphql.types";
 import Swal from "sweetalert2";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { wprest } from "@/utils/wprest";
@@ -18,6 +18,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
   const prizeStore = usePrizeDrawStore();
   const [loading, setLoading] = useState(false);
   const [uploadedMediaIds, setUploadedMediaIds] = useState<number[]>([]);
+  const [submitType, setSubmitType] = useState<"draft" | "publish">("publish");
 
   // ========== Form Fields States ============
   const {
@@ -49,7 +50,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
 
     setLoading(true);
     try {
-      const response = await wprest.CreatePrizeDrawItem(item);
+      const response = await wprest.CreatePrizeDrawItem(item, submitType);
       console.log(response);
 
       await prizeStore.updateDrawItems();
@@ -124,29 +125,30 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
               className="input-field"
             />
           </InputField>
-          <Controller
-            name="mediaIds"
-            control={control}
-            rules={{
-              required: "Please upload at least one image",
-            }}
-            render={({ field }) => (
-              <FileUploadPrime
-                onUploadComplete={(ids: number[]) => {
-                  field.onChange(ids); // <-- update RHF state
-                  setUploadedMediaIds(ids); // optional if you still want local state
-                }}
-                onFileRemove={(index: number) => {
-                  const updatedIds = (field.value || []).filter(
-                    (_: number, i: number) => i !== index,
-                  );
-                  field.onChange(updatedIds);
-                  setUploadedMediaIds(updatedIds);
-                }}
-              />
-            )}
-          />
-
+          <div className="px-12">
+            <Controller
+              name="mediaIds"
+              control={control}
+              rules={{
+                required: "Please upload at least one image",
+              }}
+              render={({ field }) => (
+                <FileUploadPrime
+                  onUploadComplete={(ids: number[]) => {
+                    field.onChange(ids); // <-- update RHF state
+                    setUploadedMediaIds(ids); // optional if you still want local state
+                  }}
+                  onFileRemove={(index: number) => {
+                    const updatedIds = (field.value || []).filter(
+                      (_: number, i: number) => i !== index,
+                    );
+                    field.onChange(updatedIds);
+                    setUploadedMediaIds(updatedIds);
+                  }}
+                />
+              )}
+            />
+          </div>
           <InputField label="Description" field="itemDescription">
             <Controller
               name="itemDescription"
@@ -232,12 +234,17 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
         </div>
         <hr className="w-full border-b border-slate-100" />
         <div className="px-8 py-5 flex gap-4 bg-orange-100 justify-end">
-          <Button className="bg-white font-bold">
+          <Button
+            type="submit"
+            onClick={() => setSubmitType("draft")}
+            className="bg-white font-bold"
+          >
             <BiPencil />
             <span>Save Draft</span>
           </Button>
           <Button
             type="submit"
+            onClick={() => setSubmitType("publish")}
             className="bg-orange-400 text-white font-bold rounded"
           >
             <span>Make Live</span>

@@ -1,7 +1,4 @@
-import type {
-  PrizeCategoryProps,
-  PrizeDrawNode,
-} from "@/types/graphql";
+import type { PrizeCategoryProps, PrizeDrawNode } from "@/types/graphql.types";
 import { GraphQLClient, gql } from "graphql-request";
 
 class WPGraphQLClient {
@@ -20,10 +17,16 @@ class WPGraphQLClient {
 
   // ================== METHODS =====================
 
-  async fetchPrizeDraws(): Promise<PrizeDrawNode[]> {
+  async fetchPrizeDraws(categorySlug: string = ""): Promise<PrizeDrawNode[]> {
     await this.refreshAccessToken();
-    const data = await this.client.request(GET_PRIZE_DRAWS);
 
+    const isFiltered = categorySlug !== "";
+
+    const data = await this.client.request(FilteredQueryHelper(isFiltered), {
+      categorySlug,
+    });
+
+    console.log(data["prizeDraws"]["nodes"]);
     return data["prizeDraws"]["nodes"];
   }
 
@@ -152,13 +155,47 @@ class WPGraphQLClient {
 
 export const wpgraphql = new WPGraphQLClient();
 
-const GET_PRIZE_DRAWS = gql`
-  query GetPrizeDraws {
-    prizeDraws(first: 10) {
+const GET_PRICE_CATEGORIES = gql`
+  query GetPrizeCategories {
+    prizeCategories {
+      nodes {
+        id
+        name
+        slug
+        count
+      }
+    }
+  }
+`;
+
+function FilteredQueryHelper(isFiltered: boolean = false) {
+  return gql`
+  query GetFilteredPrizeDraws${isFiltered ? "($categorySlug: [String!]!)" : ""} {
+    prizeDraws(
+      first: 50
+      where: {
+        stati: [PUBLISH, DRAFT]
+        ${
+          isFiltered
+            ? `taxQuery: {
+            taxArray: [
+              {
+                taxonomy: PRIZECATEGORY
+                field: SLUG
+                terms: $categorySlug
+              }
+            ]
+          }`
+            : ""
+        }
+      }
+    ) {
       nodes {
         id
         title
         slug
+        modified
+        status
         prizeCategories {
           nodes {
             id
@@ -184,52 +221,4 @@ const GET_PRIZE_DRAWS = gql`
     }
   }
 `;
-
-const GET_PRICE_CATEGORIES = gql`
-  query GetPrizeCategories {
-    prizeCategories {
-      nodes {
-        id
-        name
-        slug
-        count
-      }
-    }
-  }
-`;
-
-// const GET_FILTERED_PRICE_VIEWS = gql`
-//   query GetFilteredPrizeDraws {
-//     prizeDraws {
-//       edges {
-//         node {
-//           prizeItemsManagement {
-//             itemDescription
-//             fieldGroupName
-//             itemImage {
-//               node {
-//                 sourceUrl
-//               }
-//             }
-//             itemStatus
-//             price
-//             tickets
-//             visibility {
-//               nodes {
-//                 name
-//               }
-//             }
-//           }
-//           prizeCategories(where: { slug: %s }) {
-//             edges {
-//               node {
-//                 id
-//               }
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
-// `;
-
+}

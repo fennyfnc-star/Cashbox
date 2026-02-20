@@ -14,6 +14,7 @@ export type PrizeDrawNode = {
   id: string;
   title: string;
   slug: string;
+  status: string;
   prizeItemsManagement: PrizeItem;
   prizeCategories: {
     nodes: PrizeCategory[];

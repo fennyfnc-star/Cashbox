@@ -1,12 +1,12 @@
 import type { PropsWithChildren } from "react";
-import type { ModalProps } from "../types/modal";
+import type { ModalProps } from "../types/modal.types";
 
 const Modal = ({
   children,
   open,
   setOpen,
   loading = false,
-  loadingMsg = "Updating"
+  loadingMsg = "Updating",
 }: PropsWithChildren & ModalProps) => {
   const closeModal = () => {
     setOpen(false);

@@ -4,7 +4,7 @@ import { FiPlus } from "react-icons/fi";
 import ItemModal from "@/modals/ItemModal";
 import AddItemModal from "@/modals/AddItemModal";
 import itemImage from "@/assets/images/plane.jpg";
-import type { PrizeDrawNode } from "@/types/graphql";
+import type { PrizeDrawNode } from "@/types/graphql.types";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import { useLocation, useSearchParams } from "react-router-dom";
 import CircleLoader from "@/components/CircleLoader";
@@ -62,7 +62,7 @@ const PrizeDrawManagement = () => {
         />
       )}
       <div className="flex flex-col gap-6 p-6">
-        <div className="flex flex-col md:flex-row gap-4 pb-6 border-b border-neutral-200 bg-white sticky top-0 pt-6 -mt-8 justify-between w-full">
+        <div className="flex flex-col md:flex-row gap-4 z-99 pb-6 border-b border-neutral-200 bg-white sticky top-0 pt-6 -mt-8 justify-between w-full">
           <div className="flex flex-col gap-2 flex-1">
             <span className="text-2xl font-bold">Prize Draw Management</span>
             <span className="text-sm text-neutral-400">
@@ -105,12 +105,13 @@ const PrizeDrawManagement = () => {
                   ? prizeStore.drawItems.map((item, index) => {
                       const details = item.prizeItemsManagement;
                       const imgUrl = details?.itemImage?.node.sourceUrl;
+                      const isDrafted = item.status === "draft";
 
                       return (
                         <div
                           key={`${item.id}-${index}`}
                           onClick={() => openItemModal(item)}
-                          className="cursor-pointer 2xl:w-120 w-80 rounded-xl overflow-hidden border border-slate-200"
+                          className={`cursor-pointer 2xl:w-120 w-80 rounded-xl overflow-hidden border border-slate-200 ${isDrafted && "opacity-70"}`}
                         >
                           <img
                             src={imgUrl || itemImage}
@@ -138,15 +139,23 @@ const PrizeDrawManagement = () => {
                               </span>
                             </div>
 
-                            {details.itemStatus ? (
-                              <span className="px-2 py-1 mt-4 text-[10px] font-bold rounded-md bg-green-200 text-green-900 uppercase">
-                                Live Now
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 mt-4 text-[10px] font-bold rounded-md bg-amber-200 text-amber-900 uppercase">
-                                Suspended
-                              </span>
-                            )}
+                            <div className="flex justify-between w-full">
+                              {details.itemStatus ? (
+                                <span className="px-2 py-1 mt-4 text-[10px] font-bold rounded-md bg-green-200 text-green-900 uppercase">
+                                  Live Now
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 mt-4 text-[10px] font-bold rounded-md bg-amber-200 text-amber-900 uppercase">
+                                  Suspended
+                                </span>
+                              )}
+
+                              {item.status === "draft" && (
+                                <span className="px-2 py-1 mt-4 text-[10px] font-bold rounded-md bg-gray-200 text-neutral-900 uppercase">
+                                  Draft
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );

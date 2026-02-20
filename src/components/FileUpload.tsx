@@ -186,7 +186,7 @@ export default function FileUploadPrime({
           {typedFile.objectURL && (
             <img src={typedFile.objectURL} alt={typedFile.name} width={50} />
           )}
-          <span className="text-xs">{typedFile.name}</span>
+          <span className="text-xs truncate max-w-50">{typedFile.name}</span>
         </div>
         <div className="flex gap-2 items-center">
           <Tag

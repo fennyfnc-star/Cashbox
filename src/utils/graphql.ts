@@ -17,10 +17,12 @@ class WPGraphQLClient {
 
   // ================== METHODS =====================
 
-  async fetchPrizeDraws(categorySlug: string = ""): Promise<PrizeDrawNode[]> {
+  async fetchPrizeDraws(
+    categorySlug: string | null = null,
+  ): Promise<PrizeDrawNode[]> {
     await this.refreshAccessToken();
 
-    const isFiltered = categorySlug !== "";
+    const isFiltered = categorySlug !== null && categorySlug !== "";
 
     const data = await this.client.request(FilteredQueryHelper(isFiltered), {
       categorySlug,

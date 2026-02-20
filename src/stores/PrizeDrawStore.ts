@@ -15,16 +15,9 @@ export const usePrizeDrawStore = create<PrizeDrawStore>((set, get) => ({
   setDrawItems: (items) => set({ drawItems: items }),
   updateDrawItems: async (category: null | string = null) => {
     try {
-      const items = await wpgraphql.fetchPrizeDraws(); // your API call
-      // todo add the category in query
-      if (category) {
-        const filteredItems = items.filter((item) =>
-          item.prizeCategories.nodes.some((node) => node.name === category),
-        );
-        set({ drawItems: filteredItems });
-      } else {
-        set({ drawItems: items }); // set the fetched items
-      }
+      const items = await wpgraphql.fetchPrizeDraws(category); // your API call
+
+      set({ drawItems: items }); // set the fetched items
     } catch (error) {
       console.error("Failed to update draw items:", error);
     }

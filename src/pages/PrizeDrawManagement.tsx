@@ -25,9 +25,8 @@ const PrizeDrawManagement = () => {
   useEffect(() => {
     async function fetchItems() {
       setLoading(true);
-      const search = searchParams.get("category");
       await prizeStore.updatePrizeCategories();
-      prizeStore.updateDrawItems(search).then(() => {
+      prizeStore.updateDrawItems().then(() => {
         setLoading(false);
       });
     }

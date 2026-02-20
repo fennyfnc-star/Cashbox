@@ -174,6 +174,8 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
               <div className="flex gap-4 input-field">
                 <span className="font-bold">$</span>
                 <input
+                  min={0}
+                  step={0.01}
                   type="number"
                   {...register("price", {
                     required: true,

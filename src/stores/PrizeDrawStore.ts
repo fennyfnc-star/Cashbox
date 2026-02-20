@@ -13,8 +13,12 @@ interface PrizeDrawStore {
 export const usePrizeDrawStore = create<PrizeDrawStore>((set, get) => ({
   drawItems: [],
   setDrawItems: (items) => set({ drawItems: items }),
-  updateDrawItems: async (category: null | string = null) => {
+  updateDrawItems: async () => {
     try {
+      const hash = window.location.hash;
+      const queryParams = new URLSearchParams(hash.replace(/^#\//, ""));
+      const category = queryParams.get("category");
+      console.log("CATEGORY: ", category);
       const items = await wpgraphql.fetchPrizeDraws(category); // your API call
 
       set({ drawItems: items }); // set the fetched items

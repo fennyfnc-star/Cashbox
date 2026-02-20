@@ -110,7 +110,7 @@ const EditItemModal = ({
       <hr className="w-full border-b border-slate-100" />
 
       <form onSubmit={handleSubmit(uploadPrizeItem)}>
-        
+
         {/* ============== INPUT FIELDS =============== */}
         <div className="flex flex-col min-h-0 max-h-[70vh] pb-12 overflow-auto">
           <div className="relative flex gap-2 flex-col px-12 p-4 -mb-4">
@@ -190,7 +190,7 @@ const EditItemModal = ({
                 <span className="font-bold">$</span>
                 <input
                   min={1}
-                  step={0.1}
+                  step={0.01}
                   type="number"
                   {...register("price", {
                     required: true,

@@ -20,6 +20,7 @@ interface Props {
   onFileRemove?: (index: number) => void;
 }
 
+const MAX_MB = 5;
 export default function FileUploadPrime({
   onUploadComplete,
   onFileRemove,
@@ -135,7 +136,7 @@ export default function FileUploadPrime({
   };
 
   const headerTemplate = (options: FileUploadHeaderTemplateOptions) => {
-    const size = 1;
+    const size = MAX_MB;
     const { className, chooseButton } = options;
     // const { className, chooseButton, uploadButton, cancelButton } = options;
     const value = totalSize ? (totalSize / (size * 1000000)) * 100 : 0;
@@ -146,7 +147,7 @@ export default function FileUploadPrime({
 
     return (
       <div
-        className={className + " py-2!"}
+        className={className + " py-4!"}
         style={{
           backgroundColor: "transparent",
           display: "flex",
@@ -208,9 +209,20 @@ export default function FileUploadPrime({
 
   const emptyTemplate = () => {
     return (
-      <div className="flex items-center justify-center flex-col py-4">
+      <div
+        className="flex items-center justify-center cursor-pointer flex-col gap-2 py-4 bg-orange-100 active:bg-orange-200/70 border-2 border-dashed border-orange-200"
+        onClick={(e) => {
+          e.stopPropagation();
+          const input = fileUploadRef.current?.getInput();
+          input?.click();
+        }}
+      >
         <IoCloudUploadOutline size={32} />
-        <span className="text-xs">Drag and Drop Image Here</span>
+        <span className="text-xs">
+          <span className="text-xs text-orange-400 ">Click to upload</span> or
+          drag and drop
+        </span>
+        <span className="text-xs">SVG, PNG, JPG or GIF (max.{MAX_MB}MB)</span>
       </div>
     );
   };
@@ -218,7 +230,8 @@ export default function FileUploadPrime({
   const chooseOptions = {
     icon: "pi pi-fw pi-images",
     iconOnly: true,
-    className: "custom-choose-btn p-button-rounded p-button-outlined w-8! h-8!",
+    className:
+      "custom-choose-btn hidden! p-button-rounded p-button-outlined w-8! h-8!",
   };
   const uploadOptions = {
     icon: "pi pi-fw pi-cloud-upload",
@@ -285,7 +298,7 @@ export default function FileUploadPrime({
         multiple={false} // only one file
         accept="image/*"
         customUpload
-        maxFileSize={1_000_000}
+        maxFileSize={MAX_MB * 1024 * 1024}
         onUpload={onTemplateUpload}
         onError={onTemplateClear}
         chooseOptions={chooseOptions}

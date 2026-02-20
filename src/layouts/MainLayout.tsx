@@ -54,7 +54,7 @@ function Navigations() {
         </NavLink>
       </div>
       <div>
-        <NavLink name="Logout">
+        <NavLink name="Logout" href="/logout">
           <MdLogout className="text-red-500" />
         </NavLink>
       </div>

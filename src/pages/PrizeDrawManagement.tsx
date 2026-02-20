@@ -110,7 +110,7 @@ const PrizeDrawManagement = () => {
                         <div
                           key={`${item.id}-${index}`}
                           onClick={() => openItemModal(item)}
-                          className={`cursor-pointer 2xl:w-120 w-80 rounded-xl overflow-hidden border border-slate-200 ${isDrafted && "opacity-70"}`}
+                          className={`cursor-pointer 2xl:w-120 w-80 rounded-xl overflow-hidden border border-slate-200`}
                         >
                           <img
                             src={imgUrl || itemImage}
@@ -139,21 +139,21 @@ const PrizeDrawManagement = () => {
                             </div>
 
                             <div className="flex justify-between w-full">
-                              {details.itemStatus ? (
-                                <span className="px-2 py-1 mt-4 text-[10px] font-bold rounded-md bg-green-200 text-green-900 uppercase">
-                                  Live Now
-                                </span>
-                              ) : (
-                                <span className="px-2 py-1 mt-4 text-[10px] font-bold rounded-md bg-amber-200 text-amber-900 uppercase">
-                                  Suspended
-                                </span>
-                              )}
-
-                              {item.status === "draft" && (
-                                <span className="px-2 py-1 mt-4 text-[10px] font-bold rounded-md bg-gray-200 text-neutral-900 uppercase">
-                                  Draft
-                                </span>
-                              )}
+                              <span
+                                className={`px-2 py-1 mt-4 text-[10px] font-bold rounded-md uppercase ${
+                                  item.status === "draft"
+                                    ? "bg-gray-200 text-neutral-900"
+                                    : details.itemStatus
+                                      ? "bg-green-200 text-green-900"
+                                      : "bg-amber-200 text-amber-900"
+                                }`}
+                              >
+                                {item.status === "draft"
+                                  ? "Draft"
+                                  : details.itemStatus
+                                    ? "Live Now"
+                                    : "Suspended"}
+                              </span>
                             </div>
                           </div>
                         </div>

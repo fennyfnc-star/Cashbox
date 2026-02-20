@@ -7,7 +7,7 @@ interface PrizeDrawStore {
   setDrawItems: (items: PrizeDrawNode[]) => void;
   updateDrawItems: (category?: null | string) => Promise<void>;
   categories: PrizeCategory[];
-  updatePrizeCategories: () => void;
+  updatePrizeCategories: () => Promise<void>;
 }
 
 export const usePrizeDrawStore = create<PrizeDrawStore>((set, get) => ({

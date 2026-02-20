@@ -101,14 +101,19 @@ const ItemModal = ({
         <div className="flex gap-4 items-end  flex-1">
           <span className="font-bold text-xl">Manage Item</span>
           {/* ITEM STATUS MODAL HEADER */}
-          {drawItem.prizeItemsManagement.itemStatus ? (
+          {drawItem.status === "draft" ? (
+            <div className="flex items-center justify-center px-3 py-1 rounded-full gap-2 bg-gray-200 text-gray-700">
+              <div className="bg-gray-700 rounded-full p-1"></div>
+              <span className="uppercase font-semibold text-sm">Draft</span>
+            </div>
+          ) : drawItem.prizeItemsManagement.itemStatus ? (
             <div className="flex items-center justify-center px-3 py-1 rounded-full gap-2 bg-green-200 text-green-700">
-              <div className="bg-green-700 rounded-full p-1 "></div>
+              <div className="bg-green-700 rounded-full p-1"></div>
               <span className="uppercase font-semibold text-sm">Live</span>
             </div>
           ) : (
             <div className="flex items-center justify-center px-3 py-1 rounded-full gap-2 bg-amber-200 text-amber-700">
-              <div className="bg-amber-700 rounded-full p-1 "></div>
+              <div className="bg-amber-700 rounded-full p-1"></div>
               <span className="uppercase font-semibold text-sm">Suspended</span>
             </div>
           )}
@@ -127,15 +132,23 @@ const ItemModal = ({
             className="h-[300px] w-[350px] object-contain object-center"
             alt=""
           />
-          {drawItem.prizeItemsManagement.itemStatus ? (
-            <div className="text-green-700! flex items-center p-2 justify-center font-medium gap-2 text-sm bg-green-100 rounded-sm border border-green-300">
+          {drawItem.status === "draft" ? (
+            <div className="text-gray-700 flex items-center p-2 justify-center font-medium gap-2 text-sm bg-gray-100 rounded-sm border border-gray-300">
+              <MdWarning size={18} />
+              <span>
+                This item is currently{" "}
+                <span className="uppercase">in draft</span>
+              </span>
+            </div>
+          ) : drawItem.prizeItemsManagement.itemStatus ? (
+            <div className="text-green-700 flex items-center p-2 justify-center font-medium gap-2 text-sm bg-green-100 rounded-sm border border-green-300">
               <IoMdCheckmarkCircleOutline size={18} />
               <span>
                 This item is currently <span className="uppercase">live</span>
               </span>
             </div>
           ) : (
-            <div className="text-amber-700! flex items-center p-2 justify-center font-medium gap-2 text-sm bg-amber-100 rounded-sm border border-amber-300">
+            <div className="text-amber-700 flex items-center p-2 justify-center font-medium gap-2 text-sm bg-amber-100 rounded-sm border border-amber-300">
               <MdWarning size={18} />
               <span>
                 This item is currently{" "}
@@ -202,8 +215,16 @@ const ItemModal = ({
           <span>Remove</span>
         </Button>
         <Button
-          className={`border border-neutral-300 ${!drawItem.prizeItemsManagement.itemStatus && "opacity-50 cursor-not-allowed!"}`}
-          disabled={!drawItem.prizeItemsManagement.itemStatus}
+          className={`border border-neutral-300 ${
+            !drawItem.prizeItemsManagement.itemStatus &&
+            drawItem.status !== "draft"
+              ? "opacity-50 cursor-not-allowed!"
+              : ""
+          }`}
+          disabled={
+            !drawItem.prizeItemsManagement.itemStatus &&
+            drawItem.status !== "draft"
+          }
           onClick={() => {
             changeItemStatus(false);
           }}
@@ -222,8 +243,16 @@ const ItemModal = ({
           <span>Edit Details</span>
         </Button>
         <Button
-          className={`bg-green-100 border border-green-300 text-green-700 ${drawItem.prizeItemsManagement.itemStatus && "opacity-50 cursor-not-allowed!"}`}
-          disabled={drawItem.prizeItemsManagement.itemStatus}
+          className={`bg-green-100 border border-green-300 text-green-700 ${
+            drawItem.prizeItemsManagement.itemStatus &&
+            drawItem.status !== "draft"
+              ? "opacity-50 cursor-not-allowed!"
+              : ""
+          }`}
+          disabled={
+            drawItem.prizeItemsManagement.itemStatus &&
+            drawItem.status !== "draft"
+          }
           onClick={() => {
             changeItemStatus(true);
           }}

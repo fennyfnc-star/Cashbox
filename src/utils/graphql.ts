@@ -23,8 +23,8 @@ class WPGraphQLClient {
     await this.refreshAccessToken();
 
     const isFiltered = categorySlug !== null && categorySlug !== "";
-
-    const data = await this.client.request(FilteredQueryHelper(isFiltered), {
+    const query = FilteredQueryHelper(isFiltered);
+    const data = await this.client.request(query, {
       categorySlug,
     });
 

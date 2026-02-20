@@ -26,7 +26,7 @@ const PrizeDrawManagement = () => {
     async function fetchItems() {
       setLoading(true);
       await prizeStore.updatePrizeCategories();
-      prizeStore.updateDrawItems().then(() => {
+      await prizeStore.updateDrawItems().then(() => {
         setLoading(false);
       });
     }

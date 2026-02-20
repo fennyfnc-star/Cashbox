@@ -40,7 +40,7 @@ const ItemModal = ({
     try {
       await wpgraphql.UpdateStatus(item.id, isLive);
 
-      prizeStore.updateDrawItems().then(() => {
+      await prizeStore.updateDrawItems().then(() => {
         setDrawItem({
           ...drawItem,
           prizeItemsManagement: {
@@ -79,7 +79,7 @@ const ItemModal = ({
             text: "Your file has been deleted.",
             icon: "success",
           });
-          prizeStore.updateDrawItems().then(() => {
+          await prizeStore.updateDrawItems().then(() => {
             setLoading(false);
             setOpen(false);
           });

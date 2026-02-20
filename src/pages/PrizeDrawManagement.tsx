@@ -104,7 +104,6 @@ const PrizeDrawManagement = () => {
                   ? prizeStore.drawItems.map((item, index) => {
                       const details = item.prizeItemsManagement;
                       const imgUrl = details?.itemImage?.node.sourceUrl;
-                      const isDrafted = item.status === "draft";
 
                       return (
                         <div

@@ -6,7 +6,7 @@ import { IoClose } from "react-icons/io5";
 import Button from "@/components/Button";
 import { RxLightningBolt } from "react-icons/rx";
 import type { ModalProps } from "../types/modal.types";
-import itemImage from "@/assets/images/plane.jpg";
+import itemImage from "@/assets/images/image-coming-soon-placeholder.webp";
 import type { PrizeDrawNode } from "@/types/graphql.types";
 import { MdWarning } from "react-icons/md";
 import { useEffect, useState } from "react";
@@ -203,6 +203,18 @@ const ItemModal = ({
               </span>
             </div>
           </div>
+          {details.boughtFrom && (
+            <div className="flex gap-8">
+              <div className="flex flex-col gap-1">
+                <span className="uppercase text-xs text-neutral-400 font-semibold">
+                  Bought From
+                </span>
+                <span className="text-orange-400 font-bold text-2xl">
+                  {details.boughtFrom}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <hr className="w-full border-b border-slate-100" />

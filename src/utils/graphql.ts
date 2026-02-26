@@ -7,6 +7,7 @@ class WPGraphQLClient {
   refreshToken?: string;
   accessToken?: string | null;
   clientMutationId: string;
+  private lastRefresh: number = 0;
 
   constructor(link = "https://cashbox.com.au/graphql") {
     this.link = link;
@@ -20,7 +21,7 @@ class WPGraphQLClient {
   async fetchPrizeDraws(
     categorySlug: string | null = null,
   ): Promise<PrizeDrawNode[]> {
-    await this.refreshAccessToken();
+    await this.ensureAuth();
 
     const isFiltered = categorySlug !== null && categorySlug !== "";
     const query = FilteredQueryHelper(isFiltered);
@@ -33,7 +34,7 @@ class WPGraphQLClient {
   }
 
   async DeletePrizeDrawItem(id: string) {
-    await this.refreshAccessToken();
+    await this.ensureAuth();
     const DELETE_PRIZE_DRAW_ITEM = gql`
       mutation DeletePrizeItemStatus($id: ID!) {
         deletePrizeDraw(input: { id: $id }) {
@@ -53,7 +54,7 @@ class WPGraphQLClient {
   async UpdateStatus(id: string, isLive: boolean) {
     try {
       // Refresh token first
-      await this.refreshAccessToken();
+      await this.ensureAuth();
 
       // GraphQL mutation
       const UPDATE_PRIZE_DRAW_STATUS = gql`
@@ -113,45 +114,64 @@ class WPGraphQLClient {
   }
 
   async fetchPrizeCategories(): Promise<PrizeCategoryProps[]> {
-    await this.refreshAccessToken();
+    await this.ensureAuth();
     const data = await this.client.request(GET_PRICE_CATEGORIES);
     console.log("Prize Categories:", data);
 
     return data.prizeCategories.nodes;
   }
 
-  async refreshAccessToken() {
-    if (this.accessToken) return;
+  async ensureAuth() {
+    const tenMinutes = 10 * 60 * 1000;
+    if (!this.accessToken || Date.now() - this.lastRefresh > tenMinutes) {
+      await this.refreshAccessToken();
+      this.lastRefresh = Date.now();
+    }
+  }
 
+  async refreshAccessToken() {
     const refreshToken = this.refreshToken;
 
-    if (!refreshToken || refreshToken === "") {
-      this.loginAdmin();
-
+    if (!refreshToken) {
+      console.warn("No refresh token found. Attempting re-login...");
+      await this.loginAdmin();
       return;
     }
 
     const REFRESH_MUTATION = gql`
-      mutation RefreshAuthToken($refreshToken: String!) {
-        refreshJwtAuthToken(
-          input: { clientMutationId: "${this.clientMutationId}", jwtRefreshToken: $refreshToken }
-        ) {
-          authToken
+    mutation RefreshAuthToken($jwtRefreshToken: String!) {
+      refreshJwtAuthToken(
+        input: { 
+          clientMutationId: "${this.clientMutationId}", 
+          jwtRefreshToken: $jwtRefreshToken 
         }
+      ) {
+        authToken
       }
-    `;
+    }
+  `;
 
-    const data = await this.client.request(REFRESH_MUTATION, {
-      refreshToken,
-    });
+    try {
+      // We use a clean client here because the main client might have an expired header
+      const data: any = await this.client.request(REFRESH_MUTATION, {
+        jwtRefreshToken: refreshToken,
+      });
 
-    const accessToken = data.refreshJwtAuthToken.authToken;
-    this.client = new GraphQLClient(this.link, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    this.accessToken = accessToken;
+      const newAccessToken = data.refreshJwtAuthToken.authToken;
+
+      // Update the existing client headers instead of creating a whole new instance
+      this.accessToken = newAccessToken;
+      this.client.setHeader("Authorization", `Bearer ${newAccessToken}`);
+
+      console.log("Token successfully refreshed.");
+    } catch (error) {
+      console.error(
+        "Refresh failed. Token might be revoked or server is down.",
+        error,
+      );
+      // If refresh fails, the user needs to log in from scratch
+      await this.loginAdmin();
+    }
   }
 }
 
@@ -159,7 +179,7 @@ export const wpgraphql = new WPGraphQLClient();
 
 const GET_PRICE_CATEGORIES = gql`
   query GetPrizeCategories {
-    prizeCategories {
+    prizeCategories(first: 100) {
       nodes {
         id
         name
@@ -174,7 +194,7 @@ function FilteredQueryHelper(isFiltered: boolean = false) {
   return gql`
   query GetFilteredPrizeDraws${isFiltered ? "($categorySlug: [String!]!)" : ""} {
     prizeDraws(
-      first: 50
+      first: 100
       where: {
         stati: [PUBLISH, DRAFT]
         ${
@@ -218,6 +238,7 @@ function FilteredQueryHelper(isFiltered: boolean = false) {
           price
           stock
           tickets
+          boughtFrom
         }
       }
     }

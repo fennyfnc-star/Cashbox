@@ -3,12 +3,13 @@ import MainLayout from "@/layouts/MainLayout";
 import { FiPlus } from "react-icons/fi";
 import ItemModal from "@/modals/ItemModal";
 import AddItemModal from "@/modals/AddItemModal";
-import itemImage from "@/assets/images/plane.jpg";
+import itemImage from "@/assets/images/image-coming-soon-placeholder.webp";
 import type { PrizeDrawNode } from "@/types/graphql.types";
 import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import { useLocation, useSearchParams } from "react-router-dom";
 import CircleLoader from "@/components/CircleLoader";
 import EditItemModal from "@/modals/EditItemModal";
+// import { bulkCreatePrizeDrawItems } from "@/utils/bulk";
 
 const PrizeDrawManagement = () => {
   const [open, setOpen] = useState(false);
@@ -67,6 +68,17 @@ const PrizeDrawManagement = () => {
             <span className="text-sm text-neutral-400">
               Manage your listings, prieces, and tickets.
             </span>
+            {/* NOTE THIS BLOCK IS FOR BULKD PRIZE DRAW ITEM CREATE */}
+            {/* <div>
+              <button
+                className="bg-red-500 cursor-pointer rounded-2xl text-white font-bold px-4 py-2"
+                onClick={async () => {
+                  bulkCreatePrizeDrawItems();
+                }}
+              >
+                Bulk Create
+              </button>
+            </div> */}
 
             <span className="mt-4 text-neutral-400">
               Prize Draw Management{" "}
@@ -113,7 +125,7 @@ const PrizeDrawManagement = () => {
                         >
                           <img
                             src={imgUrl || itemImage}
-                            className="object-contain h-62 w-full"
+                            className="object-contain bg-white h-62 w-full"
                             alt=""
                           />
                           <div className="flex flex-col items-start p-4">

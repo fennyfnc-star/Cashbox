@@ -38,15 +38,17 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
   }, [uploadedMediaIds]);
 
   const createPrizeItem: SubmitHandler<CreatePrizeDrawProps> = async (item) => {
-    console.log("UPLOADMEDIAIDS: ", uploadedMediaIds);
-    if (uploadedMediaIds.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "Upload Required",
-        text: "Please upload at least one image before submitting!",
-      });
-      return;
-    }
+    // console.log("UPLOADMEDIAIDS: ", uploadedMediaIds);
+    // if (uploadedMediaIds.length === 0) {
+    //   Swal.fire({
+    //     icon: "warning",
+    //     title: "Upload Required",
+    //     text: "Please upload at least one image before submitting!",
+    //   });
+    //   return;
+    // }
+
+    // FIX add image upload here before creating not on select
 
     setLoading(true);
     try {
@@ -129,9 +131,9 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
             <Controller
               name="mediaIds"
               control={control}
-              rules={{
-                required: "Please upload at least one image",
-              }}
+              // rules={{
+              //   required: "Please upload at least one image",
+              // }}
               render={({ field }) => (
                 <FileUploadPrime
                   onUploadComplete={(ids: number[]) => {
@@ -153,7 +155,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
             <Controller
               name="itemDescription"
               control={control}
-              rules={{ required: "Description is required" }}
+              // rules={{ required: "Description is required" }}
               render={({ field }) => (
                 <RichTextEditor
                   value={field.value}
@@ -195,25 +197,44 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
                   type="number"
                   className="input-field "
                   {...register("stock", {
-                    required: true,
+                    // required: true,
                     valueAsNumber: true,
                   })}
                 />
               </div>
             </InputField>
           </div>
-          <div className="px-2">
-            <InputField label="Amounts of Tickets Required" field="tickets">
-              <input
-                type="number"
-                {...register("tickets", {
-                  required: true,
-                  valueAsNumber: true,
-                })}
-                className="input-field"
-                placeholder="ex. 500"
-              />
-            </InputField>
+          <div className="flex px-12 items-center justyify-between w-full">
+            <div className=" flex-1">
+              <InputField
+                className="relative flex gap-2 flex-col p-4"
+                label="Amounts of Tickets Required"
+                field="tickets"
+              >
+                <input
+                  type="number"
+                  {...register("tickets", {
+                    required: true,
+                    valueAsNumber: true,
+                  })}
+                  className="input-field"
+                  placeholder="ex. 500"
+                />
+              </InputField>
+            </div>
+            <div className="flex-1">
+              <InputField
+                className="relative flex gap-2 flex-col p-4"
+                label="Bought From"
+                field="tickets"
+              >
+                <input
+                  type="text"
+                  {...register("boughtFrom")}
+                  className="input-field"
+                />
+              </InputField>
+            </div>
           </div>
           <div className="px-14 mt-4 flex place-content-center">
             <div className="flex justify-between w-full p-4 rounded-lg items-center border border-neutral-200">

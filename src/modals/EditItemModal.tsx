@@ -48,6 +48,7 @@ const EditItemModal = ({
         id: item.id,
         title: item.title,
         stock: item.prizeItemsManagement.stock,
+        boughtFrom: item.prizeItemsManagement.boughtFrom || "",
         itemCategory: item.prizeCategories.nodes[0]?.id || undefined,
         itemDescription: item.prizeItemsManagement.itemDescription || "",
         price: item.prizeItemsManagement.price || 0,
@@ -110,7 +111,6 @@ const EditItemModal = ({
       <hr className="w-full border-b border-slate-100" />
 
       <form onSubmit={handleSubmit(uploadPrizeItem)}>
-
         {/* ============== INPUT FIELDS =============== */}
         <div className="flex flex-col min-h-0 max-h-[70vh] pb-12 overflow-auto">
           <div className="relative flex gap-2 flex-col px-12 p-4 -mb-4">
@@ -168,7 +168,7 @@ const EditItemModal = ({
             <Controller
               name="itemDescription"
               control={control}
-              rules={{ required: "Description is required" }}
+              // rules={{ required: "Description is required" }}
               render={({ field }) => (
                 <RichTextEditor
                   value={field.value}
@@ -210,25 +210,44 @@ const EditItemModal = ({
                   type="number"
                   className="input-field "
                   {...register("stock", {
-                    required: true,
+                    // required: true,
                     valueAsNumber: true,
                   })}
                 />
               </div>
             </InputField>
           </div>
-          <div className="px-2">
-            <InputField label="Amounts of Tickets Required" field="tickets">
-              <input
-                type="number"
-                {...register("tickets", {
-                  required: true,
-                  valueAsNumber: true,
-                })}
-                className="input-field"
-                placeholder="ex. 500"
-              />
-            </InputField>
+          <div className="flex px-12 items-center justyify-between w-full">
+            <div className=" flex-1">
+              <InputField
+                className="relative flex gap-2 flex-col p-4"
+                label="Amounts of Tickets Required"
+                field="tickets"
+              >
+                <input
+                  type="number"
+                  {...register("tickets", {
+                    required: true,
+                    valueAsNumber: true,
+                  })}
+                  className="input-field"
+                  placeholder="ex. 500"
+                />
+              </InputField>
+            </div>
+            <div className="flex-1">
+              <InputField
+                className="relative flex gap-2 flex-col p-4"
+                label="Bought From"
+                field="tickets"
+              >
+                <input
+                  type="text"
+                  {...register("boughtFrom")}
+                  className="input-field"
+                />
+              </InputField>
+            </div>
           </div>
           <div className="px-14 mt-4 flex place-content-center">
             <div className="flex justify-between w-full p-4 rounded-lg items-center border border-neutral-200">

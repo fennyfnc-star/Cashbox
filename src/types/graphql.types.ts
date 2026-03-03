@@ -32,6 +32,7 @@ export type CreatePrizeDrawProps = {
   itemCategory: string;
   boughtFrom: string;
   mediaIds: number[];
+  itemNumber: string;
 };
 
 export type PrizeCategory = {
@@ -54,6 +55,7 @@ export type PrizeItem = {
   tickets: number | null;
   stock: number;
   boughtFrom: string | null;
+  itemNumber: string | null;
 };
 
 export type PrizeCategoryProps = {

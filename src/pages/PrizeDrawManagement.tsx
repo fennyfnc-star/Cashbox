@@ -9,7 +9,10 @@ import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import { useLocation, useSearchParams } from "react-router-dom";
 import CircleLoader from "@/components/CircleLoader";
 import EditItemModal from "@/modals/EditItemModal";
-// import { bulkCreatePrizeDrawItems } from "@/utils/bulk";
+// import {
+//   bulkCreatePrizeDrawCategories,
+//   bulkCreatePrizeDrawItems,
+// } from "@/utils/bulk";
 
 const PrizeDrawManagement = () => {
   const [open, setOpen] = useState(false);
@@ -77,6 +80,17 @@ const PrizeDrawManagement = () => {
                 }}
               >
                 Bulk Create
+              </button>
+            </div>
+
+            <div>
+              <button
+                className="bg-green-500 cursor-pointer rounded-2xl text-white font-bold px-4 py-2"
+                onClick={async () => {
+                  bulkCreatePrizeDrawCategories();
+                }}
+              >
+                Bulk Category Create
               </button>
             </div> */}
 

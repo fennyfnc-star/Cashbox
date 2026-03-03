@@ -6,6 +6,7 @@ class WPRestClient {
   axiosInstance: AxiosInstance;
   token: string | null = null;
   private categoryCache: Record<string, number> = {};
+  private categoryPromises: Record<string, Promise<number>> = {};
 
   constructor() {
     this.baseURL = "https://cashbox.com.au/wp-json";
@@ -27,6 +28,7 @@ class WPRestClient {
   async CreatePrizeDrawItem(
     item: CreatePrizeDrawProps,
     status: "draft" | "publish" = "publish",
+    isBulk: Boolean = false,
   ) {
     try {
       const response = await this.axiosInstance.post("/wp/v2/prize_draw", {
@@ -42,37 +44,11 @@ class WPRestClient {
           stock: item.stock,
           tickets: item.tickets,
           bought_from: item.boughtFrom,
+          item_number: item.itemNumber,
         },
-        prize_category: [decodeGraphQLId(item.itemCategory)],
-      });
-      console.log("Created prize item via REST:", response.data);
-      return response.data;
-    } catch (err) {
-      console.error("Failed to create prize item:", err);
-      throw err;
-    }
-  }
-
-  async bulkCreatePrizeDrawItem(
-    item: CreatePrizeDrawProps,
-    status: "draft" | "publish" = "publish",
-  ) {
-    try {
-      const response = await this.axiosInstance.post("/wp/v2/prize_draw", {
-        title: item.title,
-        status: status,
-        acf: {
-          item_name: item.title,
-          item_image:
-            item.mediaIds && item.mediaIds.length > 0 ? item.mediaIds[0] : null, // first image
-          item_description: item.itemDescription,
-          item_status: item.itemStatus,
-          price: item.price,
-          stock: item.stock,
-          tickets: item.tickets,
-          bought_from: item.boughtFrom,
-        },
-        prize_category: [item.itemCategory],
+        prize_category: isBulk
+          ? [item.itemCategory]
+          : [decodeGraphQLId(item.itemCategory)],
       });
       console.log("Created prize item via REST:", response.data);
       return response.data;
@@ -83,41 +59,21 @@ class WPRestClient {
   }
 
   async ResolvePrizeCategoryId(categoryName: string): Promise<number> {
-    try {
-      // 1️⃣ Check cache first
-      if (this.categoryCache[categoryName]) {
-        return this.categoryCache[categoryName];
-      }
-
-      const slug = categoryName.toLowerCase().replace(/\s+/g, "-");
-
-      // 2️⃣ Try to fetch existing category by slug
-      const existing = await this.axiosInstance.get(
-        `/wp/v2/prize_category?slug=${slug}`,
-      );
-
-      if (existing.data.length > 0) {
-        const termId = existing.data[0].id;
-        this.categoryCache[categoryName] = termId;
-        return termId;
-      }
-
-      // 3️⃣ If not exists → create it
-      const created = await this.axiosInstance.post(`/wp/v2/prize_category`, {
-        name: categoryName,
-        slug: slug,
-      });
-
-      const termId = created.data.id;
-      this.categoryCache[categoryName] = termId;
-
-      console.log(`✅ Created new category: ${categoryName}`);
-
-      return termId;
-    } catch (error) {
-      console.error("Category resolve failed:", error);
-      throw error;
+    if (this.categoryCache[categoryName]) {
+      return this.categoryCache[categoryName];
     }
+
+    if (await this.categoryPromises[categoryName]) {
+      return this.categoryPromises[categoryName];
+    }
+
+    this.categoryPromises[categoryName] = this._resolveCategory(categoryName);
+
+    const id = await this.categoryPromises[categoryName];
+
+    delete this.categoryPromises[categoryName];
+
+    return id;
   }
 
   async DeletePrizeDrawItem(item_id: string) {
@@ -149,6 +105,7 @@ class WPRestClient {
           stock: item.stock,
           tickets: item.tickets,
           bought_from: item.boughtFrom,
+          item_number: item.itemNumber
         },
         prize_category: [decodeGraphQLId(item.itemCategory)],
       };
@@ -235,6 +192,56 @@ class WPRestClient {
 
   async GetToken() {
     this.login("fenny", "M2CaHOO&@&");
+  }
+
+  private async _resolveCategory(categoryName: string): Promise<number> {
+    const slug = categoryName.toLowerCase().replace(/\s+/g, "-");
+
+    try {
+      // Check if category exists
+      const existing = await this.axiosInstance.get(
+        `/wp/v2/prize_category?slug=${slug}`,
+      );
+
+      if (existing.data.length > 0) {
+        const termId = existing.data[0].id;
+        this.categoryCache[categoryName] = termId;
+        return termId;
+      }
+
+      // Create category
+      const created = await this.axiosInstance.post(`/wp/v2/prize_category`, {
+        name: categoryName,
+        slug,
+      });
+
+      const termId = created.data.id;
+      this.categoryCache[categoryName] = termId;
+
+      console.log(`✅ Created new category: ${categoryName}`);
+
+      return termId;
+    } catch (error: any) {
+      const wpError = error?.response?.data;
+
+      if (wpError?.code === "term_exists") {
+        const termId = wpError?.data?.term_id ?? wpError?.additional_data?.[0];
+
+        if (!termId) {
+          throw error;
+        }
+
+        console.log(
+          `♻️ Category already exists (race handled): ${categoryName} → ${termId}`,
+        );
+
+        this.categoryCache[categoryName] = termId;
+
+        return termId;
+      }
+
+      throw error;
+    }
   }
 }
 

@@ -117,6 +117,9 @@ const ItemModal = ({
               <span className="uppercase font-semibold text-sm">Suspended</span>
             </div>
           )}
+          <span className="text-sm bg-orange-400 px-2 rounded-lg text-white font-semibold">
+            #{item.prizeItemsManagement.itemNumber}
+          </span>
         </div>
         <IoClose
           size={24}
@@ -162,7 +165,7 @@ const ItemModal = ({
             <span className="uppercase text-xs text-neutral-400 font-semibold">
               Product Heading
             </span>
-            <span className="text-xl font-semibold">{item.title}</span>
+            <span className="text-xl font-semibold">{item.title} </span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="uppercase text-xs text-neutral-400 font-semibold">

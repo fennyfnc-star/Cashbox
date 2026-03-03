@@ -62,6 +62,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
         text: "Item has been added successfully!",
       });
       setOpen(false);
+      reset();
     } catch (error: any) {
       Swal.fire({
         icon: "error",
@@ -70,8 +71,6 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
       });
     }
     setLoading(false);
-
-    reset();
   };
 
   return (
@@ -104,21 +103,32 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
       <form onSubmit={handleSubmit(createPrizeItem)}>
         {/* ============== INPUT FIELDS =============== */}
         <div className="flex flex-col min-h-0 max-h-[70vh] pb-12 overflow-auto">
-          <div className="relative flex gap-2 flex-col px-12 p-4 -mb-4">
-            <span className="font-medium">Category</span>
-            <select
-              {...register("itemCategory", { required: false })}
-              className="input-field "
-            >
-              <option value="" className="hidden">
-                -- Select Category --
-              </option>
-              {prizeStore.categories.map((val, idx) => (
-                <option key={`${val.slug}-${idx}`} value={val.id}>
-                  {val.name}
+          <div className="grid grid-cols-2 gap-4 px-12 p-4 -mb-4">
+            <div className="relative flex gap-2 flex-col">
+              <span className="font-medium">Category</span>
+              <select
+                {...register("itemCategory", { required: true })}
+                className="input-field "
+              >
+                <option value="" className="hidden">
+                  -- Select Category --
                 </option>
-              ))}
-            </select>
+                {prizeStore.categories.map((val, idx) => (
+                  <option key={`${val.slug}-${idx}`} value={val.id}>
+                    {val.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="relative flex gap-2 flex-col">
+              <span className="font-medium">Item Number</span>
+              <input
+                type="text"
+                {...register("itemNumber", { required: true })}
+                className="input-field"
+                placeholder="ex. AC0001"
+              />
+            </div>
           </div>
           <InputField label="Item name" field="title">
             <input

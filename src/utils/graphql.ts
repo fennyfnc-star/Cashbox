@@ -239,6 +239,7 @@ function FilteredQueryHelper(isFiltered: boolean = false) {
           stock
           tickets
           boughtFrom
+          itemNumber
         }
       }
     }

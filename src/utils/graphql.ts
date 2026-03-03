@@ -8,12 +8,14 @@ class WPGraphQLClient {
   accessToken?: string | null;
   clientMutationId: string;
   private lastRefresh: number = 0;
+  private refreshTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(link = "https://cashbox.com.au/graphql") {
     this.link = link;
     this.clientMutationId = "reactWP1ce3g450f";
     this.client = new GraphQLClient(link);
     this.loginAdmin();
+    this.scheduleRefresh(900); // example: 15 minutes token
   }
 
   // ================== METHODS =====================
@@ -85,34 +87,6 @@ class WPGraphQLClient {
     }
   }
 
-  async loginAdmin() {
-    const LOGIN_ADMIN = gql`
-      mutation LoginUser {
-        login(
-          input: {
-            clientMutationId: "${this.clientMutationId}"
-            username: "fenny"
-            password: "M2CaHOO&@&"
-          }
-        ) {
-          authToken
-          refreshToken
-        }
-      }
-    `;
-
-    const data = await this.client.request(LOGIN_ADMIN);
-
-    this.client = new GraphQLClient(this.link, {
-      headers: {
-        Authorization: `Bearer ${data.login.authToken}`,
-      },
-    });
-
-    this.refreshToken = data.login.refreshToken;
-    console.log("user logged in");
-  }
-
   async fetchPrizeCategories(): Promise<PrizeCategoryProps[]> {
     await this.ensureAuth();
     const data = await this.client.request(GET_PRICE_CATEGORIES);
@@ -172,6 +146,47 @@ class WPGraphQLClient {
       // If refresh fails, the user needs to log in from scratch
       await this.loginAdmin();
     }
+  }
+
+  private scheduleRefresh(expiresInSeconds: number) {
+    // refresh 1 minute before expiry
+    const refreshTime = (expiresInSeconds - 60) * 1000;
+
+    if (this.refreshTimeout) {
+      clearTimeout(this.refreshTimeout);
+    }
+
+    this.refreshTimeout = setTimeout(() => {
+      this.refreshAccessToken();
+    }, refreshTime);
+  }
+
+  async loginAdmin() {
+    const LOGIN_ADMIN = gql`
+      mutation LoginUser {
+        login(
+          input: {
+            clientMutationId: "${this.clientMutationId}"
+            username: "fenny"
+            password: "M2CaHOO&@&"
+          }
+        ) {
+          authToken
+          refreshToken
+        }
+      }
+    `;
+
+    const data = await this.client.request(LOGIN_ADMIN);
+
+    this.client = new GraphQLClient(this.link, {
+      headers: {
+        Authorization: `Bearer ${data.login.authToken}`,
+      },
+    });
+
+    this.refreshToken = data.login.refreshToken;
+    console.log("user logged in");
   }
 }
 

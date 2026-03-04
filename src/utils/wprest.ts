@@ -105,7 +105,7 @@ class WPRestClient {
           stock: item.stock,
           tickets: item.tickets,
           bought_from: item.boughtFrom,
-          item_number: item.itemNumber
+          item_number: item.itemNumber,
         },
         prize_category: [decodeGraphQLId(item.itemCategory)],
       };
@@ -113,6 +113,8 @@ class WPRestClient {
       if (item.mediaIds && item.mediaIds.length > 0) {
         // @ts-ignore
         payload.acf["item_image"] = item.mediaIds[0];
+
+        await this.deleteMedia(decodeGraphQLId(String(item.mediaIds[1])));
       }
 
       const response = await this.axiosInstance.patch(
@@ -247,7 +249,7 @@ class WPRestClient {
 
 export const wprest = new WPRestClient();
 
-function decodeGraphQLId(base64Id: string): number {
+export function decodeGraphQLId(base64Id: string): number {
   // Decode Base64 to string
   const decoded = atob(base64Id); // e.g., "term:666"
   // Extract numeric part

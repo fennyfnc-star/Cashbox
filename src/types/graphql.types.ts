@@ -33,6 +33,7 @@ export type CreatePrizeDrawProps = {
   boughtFrom: string;
   mediaIds: number[];
   itemNumber: string;
+  file?: File;
 };
 
 export type PrizeCategory = {

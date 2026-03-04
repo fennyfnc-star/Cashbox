@@ -9,6 +9,7 @@ import FileUploadPrime from "../components/FileUpload";
 import RichTextEditor from "../components/RichTextEditor";
 import { InputSwitch } from "primereact/inputswitch";
 import { useEffect, useState, type HTMLAttributes } from "react";
+import itemImage from "@/assets/images/image-coming-soon-placeholder.webp";
 import type {
   CreatePrizeDrawProps,
   PrizeDrawNode,
@@ -24,7 +25,6 @@ const EditItemModal = ({
 }: ModalProps & { item: PrizeDrawNode }) => {
   const prizeStore = usePrizeDrawStore();
   const [loading, setLoading] = useState(false);
-  const [_, setUploadedMediaIds] = useState<number[]>([]);
   const [submitType, setSubmitType] = useState<"draft" | "publish">("publish");
 
   // ========== Form Fields States ============
@@ -59,10 +59,23 @@ const EditItemModal = ({
     }
   }, [item, reset]);
 
-  const uploadPrizeItem: SubmitHandler<CreatePrizeDrawProps> = async (item) => {
+  const uploadPrizeItem: SubmitHandler<CreatePrizeDrawProps> = async (
+    updatedItem,
+  ) => {
     setLoading(true);
     try {
-      const response = await wprest.UpdatePrizeDrawItem(item, submitType);
+      if (updatedItem.file) {
+        const uploadResponse = await wprest.uploadMedia(updatedItem.file);
+        updatedItem.mediaIds = [
+          uploadResponse.id,
+          item.prizeItemsManagement.itemImage?.node.id,
+        ];
+      }
+
+      const response = await wprest.UpdatePrizeDrawItem(
+        updatedItem,
+        submitType,
+      );
       console.log("UPDATE RESPONSE: ", response);
 
       await prizeStore.updateDrawItems();
@@ -151,25 +164,17 @@ const EditItemModal = ({
           </InputField>
           <div className="grid grid-cols-[200px_1fr] px-14">
             <img
-              src={item.prizeItemsManagement.itemImage?.node.sourceUrl}
+              src={
+                item.prizeItemsManagement.itemImage?.node.sourceUrl || itemImage
+              }
               className="h-40 w-40 object-contain object-center border rounded-xl border-orange-200"
             />
             <Controller
-              name="mediaIds"
+              name="file"
               control={control}
               render={({ field }) => (
                 <FileUploadPrime
-                  onUploadComplete={(ids: number[]) => {
-                    field.onChange(ids); // <-- update RHF state
-                    setUploadedMediaIds(ids); // optional if you still want local state
-                  }}
-                  onFileRemove={(index: number) => {
-                    const updatedIds = (field.value || []).filter(
-                      (_: number, i: number) => i !== index,
-                    );
-                    field.onChange(updatedIds);
-                    setUploadedMediaIds(updatedIds);
-                  }}
+                  onFileSelect={(file) => field.onChange(file)}
                 />
               )}
             />

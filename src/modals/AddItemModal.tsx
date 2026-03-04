@@ -17,7 +17,6 @@ import { wprest } from "@/utils/wprest";
 const AddItemModal = ({ open, setOpen }: ModalProps) => {
   const prizeStore = usePrizeDrawStore();
   const [loading, setLoading] = useState(false);
-  const [uploadedMediaIds, setUploadedMediaIds] = useState<number[]>([]);
   const [submitType, setSubmitType] = useState<"draft" | "publish">("publish");
 
   // ========== Form Fields States ============
@@ -33,25 +32,14 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
     reValidateMode: "onSubmit",
   });
 
-  useEffect(() => {
-    console.log("USEFFECT UPLOADMEDIAIDS: ", uploadedMediaIds);
-  }, [uploadedMediaIds]);
-
   const createPrizeItem: SubmitHandler<CreatePrizeDrawProps> = async (item) => {
-    // console.log("UPLOADMEDIAIDS: ", uploadedMediaIds);
-    // if (uploadedMediaIds.length === 0) {
-    //   Swal.fire({
-    //     icon: "warning",
-    //     title: "Upload Required",
-    //     text: "Please upload at least one image before submitting!",
-    //   });
-    //   return;
-    // }
-
-    // FIX add image upload here before creating not on select
-
     setLoading(true);
     try {
+      if (item.file) {
+        const uploadResponse = await wprest.uploadMedia(item.file);
+        item.mediaIds = [uploadResponse.id];
+      }
+
       const response = await wprest.CreatePrizeDrawItem(item, submitType);
       console.log(response);
 
@@ -139,24 +127,11 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
           </InputField>
           <div className="px-12">
             <Controller
-              name="mediaIds"
+              name="file"
               control={control}
-              // rules={{
-              //   required: "Please upload at least one image",
-              // }}
               render={({ field }) => (
                 <FileUploadPrime
-                  onUploadComplete={(ids: number[]) => {
-                    field.onChange(ids); // <-- update RHF state
-                    setUploadedMediaIds(ids); // optional if you still want local state
-                  }}
-                  onFileRemove={(index: number) => {
-                    const updatedIds = (field.value || []).filter(
-                      (_: number, i: number) => i !== index,
-                    );
-                    field.onChange(updatedIds);
-                    setUploadedMediaIds(updatedIds);
-                  }}
+                  onFileSelect={(file) => field.onChange(file)}
                 />
               )}
             />

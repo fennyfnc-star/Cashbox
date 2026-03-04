@@ -15,20 +15,21 @@ import { Tag } from "primereact/tag";
 import { IoCloudUploadOutline } from "react-icons/io5";
 import { wprest } from "@/utils/wprest";
 
+// interface Props {
+//   onUploadComplete?: (mediaIds: number[]) => void;
+//   onFileRemove?: (index: number) => void;
+// }
+
 interface Props {
-  onUploadComplete?: (mediaIds: number[]) => void;
-  onFileRemove?: (index: number) => void;
+  onFileSelect?: (file: File | null) => void;
 }
 
 const MAX_MB = 5;
-export default function FileUploadPrime({
-  onUploadComplete,
-  onFileRemove,
-}: Props) {
+export default function FileUploadPrime({ onFileSelect }: Props) {
   const toast = useRef<Toast>(null);
   const [totalSize, setTotalSize] = useState(0);
   const [_, setUploading] = useState(false);
-  const [mediaIds, setMediaIds] = useState<number[]>([]);
+  // const [mediaIds, setMediaIds] = useState<number[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const fileUploadRef = useRef<FileUpload>(null);
@@ -38,11 +39,11 @@ export default function FileUploadPrime({
     try {
       const media = await wprest.uploadMedia(file);
 
-      setMediaIds((prev) => {
-        const updated = [...prev, media.id];
-        setTimeout(() => onUploadComplete?.(updated), 0);
-        return updated;
-      });
+      // setMediaIds((prev) => {
+      //   const updated = [...prev, media.id];
+      //   setTimeout(() => onUploadComplete?.(updated), 0);
+      //   return updated;
+      // });
 
       toast.current?.show({
         severity: "success",
@@ -61,9 +62,6 @@ export default function FileUploadPrime({
       setSelectedFiles((prev) => prev.filter((f) => f !== file));
 
       // Remove from mediaIds if added (precaution)
-      setMediaIds((prev) =>
-        prev.filter((_, idx) => selectedFiles[idx] !== file),
-      );
     } finally {
       setUploading(false);
     }
@@ -72,27 +70,14 @@ export default function FileUploadPrime({
   const onSelect = async (e: FileUploadSelectEvent) => {
     const file = e.files[0] as File; // only one file allowed
 
-    setMediaIds([]); // reset old mediaId, will be set after upload
-
     // Immediately upload the new file
-    await handleFileUpload(file);
+
     // Replace any previously selected file
     setSelectedFiles([file]);
 
     // Update total size for UI
     setTotalSize(file.size || 0);
   };
-
-  // const onTemplateSelect = (e: FileUploadSelectEvent) => {
-  //   let _totalSize = totalSize;
-  //   let files = e.files;
-
-  //   for (let i = 0; i < files.length; i++) {
-  //     _totalSize += files[i].size || 0;
-  //   }
-
-  //   setTotalSize(_totalSize);
-  // };
 
   const onTemplateUpload = (e: FileUploadUploadEvent) => {
     let _totalSize = 0;
@@ -121,11 +106,11 @@ export default function FileUploadPrime({
 
     // Remove from local state
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setMediaIds((prev) => prev.filter((_, i) => i !== index));
 
     // Call parent callback
-    onFileRemove?.(index);
-    onUploadComplete?.(mediaIds);
+    // onFileRemove?.(index);
+    // onUploadComplete?.(mediaIds);
+    onFileSelect?.(null);
 
     // Remove from PrimeReact UI
     removeCallback();
@@ -173,13 +158,6 @@ export default function FileUploadPrime({
 
   const itemTemplate = (inFile: object, props: ItemTemplateOptions) => {
     const typedFile = inFile as File & { objectURL?: string };
-
-    // Check if this file has a mediaId (i.e., upload completed)
-    const isUploaded = mediaIds.length > 0 && selectedFiles[0] === typedFile;
-    if (!isUploaded)
-      return (
-        <div className="p-8 flex items-center justify-center">Uploading...</div>
-      ); // hide if still uploading
 
     return (
       <div className="flex items-center justify-between p-2">
@@ -254,7 +232,7 @@ export default function FileUploadPrime({
       <Tooltip target=".custom-upload-btn" content="Upload" position="bottom" />
       <Tooltip target=".custom-cancel-btn" content="Clear" position="bottom" />
 
-      {/* <FileUpload
+      <FileUpload
         ref={fileUploadRef}
         name="demo[]"
         multiple={false}
@@ -273,7 +251,7 @@ export default function FileUploadPrime({
           });
         }}
         onSelect={(e) => {
-          onTemplateSelect(e);
+          onSelect(e);
 
           const file = e.files[0];
           if (onFileSelect) {
@@ -290,9 +268,9 @@ export default function FileUploadPrime({
         chooseOptions={chooseOptions}
         uploadOptions={uploadOptions}
         cancelOptions={cancelOptions}
-      /> */}
+      />
 
-      <FileUpload
+      {/* <FileUpload
         ref={fileUploadRef}
         name="files[]"
         multiple={false} // only one file
@@ -323,7 +301,7 @@ export default function FileUploadPrime({
         headerTemplate={headerTemplate}
         itemTemplate={itemTemplate}
         emptyTemplate={emptyTemplate}
-      />
+      />*/}
     </div>
   );
 }

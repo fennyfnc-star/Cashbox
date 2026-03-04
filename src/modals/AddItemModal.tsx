@@ -8,7 +8,7 @@ import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import FileUploadPrime from "../components/FileUpload";
 import RichTextEditor from "../components/RichTextEditor";
 import { InputSwitch } from "primereact/inputswitch";
-import { useEffect, useState, type HTMLAttributes } from "react";
+import { useState, type HTMLAttributes } from "react";
 import type { CreatePrizeDrawProps } from "@/types/graphql.types";
 import Swal from "sweetalert2";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";

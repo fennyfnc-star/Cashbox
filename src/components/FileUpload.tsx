@@ -2,10 +2,8 @@ import { useRef, useState } from "react";
 import { Toast } from "primereact/toast";
 import {
   FileUpload,
-  type FileUploadHandlerEvent,
   type FileUploadHeaderTemplateOptions,
   type FileUploadSelectEvent,
-  type FileUploadUploadEvent,
   type ItemTemplateOptions,
 } from "primereact/fileupload";
 import { ProgressBar } from "primereact/progressbar";
@@ -13,7 +11,6 @@ import { Button } from "primereact/button";
 import { Tooltip } from "primereact/tooltip";
 import { Tag } from "primereact/tag";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import { wprest } from "@/utils/wprest";
 
 // interface Props {
 //   onUploadComplete?: (mediaIds: number[]) => void;
@@ -28,44 +25,11 @@ const MAX_MB = 5;
 export default function FileUploadPrime({ onFileSelect }: Props) {
   const toast = useRef<Toast>(null);
   const [totalSize, setTotalSize] = useState(0);
-  const [_, setUploading] = useState(false);
   // const [mediaIds, setMediaIds] = useState<number[]>([]);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [_, setSelectedFiles] = useState<File[]>([]);
 
   const fileUploadRef = useRef<FileUpload>(null);
 
-  const handleFileUpload = async (file: File) => {
-    setUploading(true);
-    try {
-      const media = await wprest.uploadMedia(file);
-
-      // setMediaIds((prev) => {
-      //   const updated = [...prev, media.id];
-      //   setTimeout(() => onUploadComplete?.(updated), 0);
-      //   return updated;
-      // });
-
-      toast.current?.show({
-        severity: "success",
-        summary: "Uploaded",
-        detail: file.name,
-      });
-    } catch (err) {
-      console.error(err);
-      toast.current?.show({
-        severity: "error",
-        summary: "Upload Failed",
-        detail: file.name,
-      });
-
-      // Remove failed file from selectedFiles
-      setSelectedFiles((prev) => prev.filter((f) => f !== file));
-
-      // Remove from mediaIds if added (precaution)
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const onSelect = async (e: FileUploadSelectEvent) => {
     const file = e.files[0] as File; // only one file allowed
@@ -77,21 +41,6 @@ export default function FileUploadPrime({ onFileSelect }: Props) {
 
     // Update total size for UI
     setTotalSize(file.size || 0);
-  };
-
-  const onTemplateUpload = (e: FileUploadUploadEvent) => {
-    let _totalSize = 0;
-
-    e.files.forEach((file) => {
-      _totalSize += file.size || 0;
-    });
-
-    setTotalSize(_totalSize);
-    toast.current?.show({
-      severity: "info",
-      summary: "Success",
-      detail: "File Uploaded",
-    });
   };
 
   const onTemplateRemove = (

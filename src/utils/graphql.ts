@@ -60,8 +60,14 @@ class WPGraphQLClient {
 
       // GraphQL mutation
       const UPDATE_PRIZE_DRAW_STATUS = gql`
-        mutation UpdatePrizeDraw($id: ID!, $itemStatus: Boolean!) {
-          updatePrizeItemStatus(input: { id: $id, itemStatus: $itemStatus }) {
+        mutation UpdatePrizeDraw(
+          $id: ID!
+          $itemStatus: Boolean!
+          $status: String!
+        ) {
+          updatePrizeItemStatus(
+            input: { id: $id, itemStatus: $itemStatus, status: $status }
+          ) {
             clientMutationId
           }
         }
@@ -71,10 +77,11 @@ class WPGraphQLClient {
       const data = await this.client.request(UPDATE_PRIZE_DRAW_STATUS, {
         id,
         itemStatus: isLive,
+        status: isLive ? "PUBLISH" : "PRIVATE",
       });
 
       console.log("Mutation successful:", data);
-      return data; // optional, return the result
+      return data;
     } catch (error: any) {
       // Handle errors here
       console.error("Error updating prize item status:", error);
@@ -211,7 +218,7 @@ function FilteredQueryHelper(isFiltered: boolean = false) {
     prizeDraws(
       first: 100
       where: {
-        stati: [PUBLISH, DRAFT]
+        stati: [PUBLISH, DRAFT, PRIVATE]
         ${
           isFiltered
             ? `taxQuery: {

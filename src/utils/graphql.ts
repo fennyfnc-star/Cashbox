@@ -61,7 +61,10 @@ class WPGraphQLClient {
           updatePrizeItemStatus(
             input: { id: $id, itemStatus: $itemStatus }
           ) {
-            clientMutationId
+            prizeDraw {
+              id
+              status
+            }
           }
         }
       `;

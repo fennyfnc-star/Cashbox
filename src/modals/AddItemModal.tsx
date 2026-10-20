@@ -8,22 +8,24 @@ import { usePrizeDrawStore } from "@/stores/PrizeDrawStore";
 import FileUploadPrime from "../components/FileUpload";
 import RichTextEditor from "../components/RichTextEditor";
 import { InputSwitch } from "primereact/inputswitch";
-import { useState, type HTMLAttributes } from "react";
+import { useRef, useState, type HTMLAttributes } from "react";
 import type { CreatePrizeDrawProps } from "@/types/graphql.types";
 import Swal from "sweetalert2";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { wprest } from "@/utils/wprest";
+import { wpgraphql } from "@/utils/graphql";
 
 const AddItemModal = ({ open, setOpen }: ModalProps) => {
   const prizeStore = usePrizeDrawStore();
   const [loading, setLoading] = useState(false);
-  const [submitType, setSubmitType] = useState<"draft" | "publish">("publish");
+  const submitType = useRef<"draft" | "publish">("publish");
 
   // ========== Form Fields States ============
   const {
     control,
     register,
     handleSubmit,
+    setValue,
     // watch,
     reset,
     formState: { errors },
@@ -35,12 +37,23 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
   const createPrizeItem: SubmitHandler<CreatePrizeDrawProps> = async (item) => {
     setLoading(true);
     try {
+      const publishItem = submitType.current === "publish";
+      if (publishItem) {
+        item.itemStatus = true;
+      }
+
       if (item.file) {
         const uploadResponse = await wprest.uploadMedia(item.file);
         item.mediaIds = [uploadResponse.id];
       }
 
-      const response = await wprest.CreatePrizeDrawItem(item, submitType);
+      const response = await wprest.CreatePrizeDrawItem(
+        item,
+        publishItem ? "publish" : "draft",
+      );
+      if (publishItem) {
+        await wpgraphql.UpdateStatus(btoa(`post:${response.id}`), true);
+      }
       console.log(response);
 
       await prizeStore.updateDrawItems();
@@ -51,11 +64,15 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
       });
       setOpen(false);
       reset();
-    } catch (error: any) {
+      submitType.current = "publish";
+    } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Error!",
-        text: "Something went wrong when adding this item!",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong when adding this item!",
       });
     }
     setLoading(false);
@@ -83,6 +100,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
           onClick={() => {
             setOpen(false);
             reset();
+            submitType.current = "publish";
           }}
         />
       </div>
@@ -244,7 +262,9 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
         <div className="px-8 py-5 flex gap-4 bg-orange-100 justify-end">
           <Button
             type="submit"
-            onClick={() => setSubmitType("draft")}
+            onClick={() => {
+              submitType.current = "draft";
+            }}
             className="bg-white font-bold"
           >
             <BiPencil />
@@ -252,7 +272,10 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
           </Button>
           <Button
             type="submit"
-            onClick={() => setSubmitType("publish")}
+            onClick={() => {
+              submitType.current = "publish";
+              setValue("itemStatus", true);
+            }}
             className="bg-orange-400 text-white font-bold rounded"
           >
             <span>Make Live</span>

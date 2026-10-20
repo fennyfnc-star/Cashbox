@@ -54,7 +54,10 @@ const ItemModal = ({
       Swal.fire({
         icon: "error",
         title: "Error!",
-        text: "Something went wrong when changing this item's status.",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong when changing this item's status.",
       });
     } finally {
       setLoading(false);

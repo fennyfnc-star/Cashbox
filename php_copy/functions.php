@@ -190,6 +190,10 @@ add_action('graphql_register_types', function() {
 			$relay_id = $input['id']; // e.g., "cG9zdDo4ODE2"
 			$decoded = Relay::fromGlobalId($relay_id); // ['type' => 'PrizeDraw', 'id' => '8816']
 			$post_id = $decoded['id'];
+            $post = get_post((int) $post_id);
+            if (!$post || $post->post_type !== 'prize_draw') {
+                throw new \GraphQL\Error\UserError('Prize draw item not found.');
+            }
 
             if (
                 !cashbox_can_manage_prize_draws() ||
@@ -201,18 +205,26 @@ add_action('graphql_register_types', function() {
 			$is_live = (bool) $input['itemStatus'];
 			$post_status = $is_live ? 'publish' : 'private';
 
-			// Update the ACF field
-			update_field('field_696586af9585a', $is_live, $post_id);
+            if (!taxonomy_exists('visibility')) {
+                throw new \GraphQL\Error\UserError('The visibility taxonomy is not available.');
+            }
 
-            $visibility_result = $is_live
-                ? wp_set_object_terms($post_id, ['live'], 'visibility', true)
-                : wp_remove_object_terms($post_id, 'live', 'visibility');
+            $live_term = get_term_by('slug', 'live', 'visibility');
+            if ($is_live && !$live_term) {
+                throw new \GraphQL\Error\UserError('The live visibility term does not exist.');
+            }
+
+            $visibility_result = $live_term
+                ? ($is_live
+                    ? wp_set_object_terms($post_id, [(int) $live_term->term_id], 'visibility', true)
+                    : wp_remove_object_terms($post_id, (int) $live_term->term_id, 'visibility'))
+                : true;
             if (is_wp_error($visibility_result)) {
                 throw new \GraphQL\Error\UserError($visibility_result->get_error_message());
             }
 
-			// Make sure the post is published
-			$post = get_post($post_id);
+            update_field('field_696586af9585a', $is_live, $post_id);
+
 			if ($post->post_status !== $post_status) {
 				$updated_post = wp_update_post([
 					'ID' => $post_id,

@@ -4,23 +4,18 @@ import axios, { type AxiosInstance } from "axios";
 class WPRestClient {
   baseURL: string;
   axiosInstance: AxiosInstance;
-  token: string | null = null;
   private categoryCache: Record<string, number> = {};
   private categoryPromises: Record<string, Promise<number>> = {};
 
   constructor() {
-    this.baseURL = "https://cashbox.com.au/wp-json";
+    this.baseURL = `${window.location.origin}/wp-json`;
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
       withCredentials: true,
+      headers: { "X-WP-Nonce": window.cashboxAuth?.nonce ?? "" },
     });
 
-    this.axiosInstance.interceptors.request.use((config) => {
-      if (this.token && config.headers) {
-        config.headers.Authorization = `Bearer ${this.token}`;
-      }
-      return config;
-    });
+
   }
 
   //   ============== METHODS =====================
@@ -171,29 +166,6 @@ class WPRestClient {
       console.error("Failed to delete media:", err);
       throw err;
     }
-  }
-
-  async login(username: string, password: string) {
-    if (this.token) return;
-
-    try {
-      const response = await axios.post(`${this.baseURL}/jwt-auth/v1/token`, {
-        username,
-        password,
-      });
-
-      console.log("LOGIN VIA REST: ", response);
-
-      this.token = response.data.token; // store token in the instance
-      return response.data; // return user info + token
-    } catch (error) {
-      console.error("Login failed", error);
-      throw error;
-    }
-  }
-
-  async GetToken() {
-    this.login("fenny", "M2CaHOO&@&");
   }
 
   private async _resolveCategory(categoryName: string): Promise<number> {

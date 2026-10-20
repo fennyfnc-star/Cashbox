@@ -106,6 +106,7 @@ add_shortcode( 'prize_first_term', function() {
 function enqueue_react_app() {
     // Only load on your specific page
     if (is_page('prize-draw-management')) {
+        if (!is_user_logged_in() || !current_user_can('edit_posts')) return;
         $manifest_path = get_stylesheet_directory() . '/react/assets/manifest.json';
 
         if (!file_exists($manifest_path)) return;
@@ -131,6 +132,12 @@ function enqueue_react_app() {
                 null,
                 true
             );
+            wp_add_inline_script('react-app-js', 'window.cashboxAuth = ' . wp_json_encode([
+                'nonce' => wp_create_nonce('wp_rest'),
+                'userId' => get_current_user_id(),
+                'graphqlUrl' => home_url('/graphql'),
+                'restUrl' => rest_url(),
+            ]) . ';', 'before');
         }
     }
 }
@@ -167,6 +174,10 @@ add_action('graphql_register_types', function() {
 			$relay_id = $input['id']; // e.g., "cG9zdDo4ODE2"
 			$decoded = Relay::fromGlobalId($relay_id); // ['type' => 'PrizeDraw', 'id' => '8816']
 			$post_id = $decoded['id'];
+
+            if (!is_user_logged_in() || !current_user_can('edit_post', (int) $post_id)) {
+                throw new \GraphQL\Error\UserError('Not authorized to edit this prize draw.');
+            }
 
 			$status = $input['itemStatus'];
 			$post_status = $input['status'];

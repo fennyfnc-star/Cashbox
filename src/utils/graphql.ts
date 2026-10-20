@@ -54,7 +54,7 @@ class WPGraphQLClient {
         updatePrizeItemStatus(
           input: { id: $id, itemStatus: $itemStatus }
         ) {
-          success
+          clientMutationId
         }
       }
     `;
@@ -64,9 +64,6 @@ class WPGraphQLClient {
         id,
         itemStatus: isLive,
       });
-      if (!data.updatePrizeItemStatus?.success) {
-        throw new Error("WordPress did not confirm the status update.");
-      }
       return data;
     } catch (error) {
       console.error("Error updating prize item status:", error);

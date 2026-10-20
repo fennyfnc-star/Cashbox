@@ -176,10 +176,10 @@ add_action('graphql_register_types', function() {
             ],
         ],
         'outputFields' => [
-            'success' => [
-                'type' => 'Boolean',
+            'prizeDraw' => [
+                'type' => 'PrizeDraw',
                 'resolve' => function($payload) {
-                    return $payload['success'];
+                    return $payload['post'];
                 },
             ],
         ],
@@ -240,7 +240,7 @@ add_action('graphql_register_types', function() {
                 }
             }
 
-            return ['success' => true];
+            return ['post' => get_post($post_id)];
         },
     ]);
 });

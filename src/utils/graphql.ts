@@ -57,10 +57,9 @@ class WPGraphQLClient {
         mutation UpdatePrizeDraw(
           $id: ID!
           $itemStatus: Boolean!
-          $status: String!
         ) {
           updatePrizeItemStatus(
-            input: { id: $id, itemStatus: $itemStatus, status: $status }
+            input: { id: $id, itemStatus: $itemStatus }
           ) {
             clientMutationId
           }
@@ -71,7 +70,6 @@ class WPGraphQLClient {
       const data = await this.client.request(UPDATE_PRIZE_DRAW_STATUS, {
         id,
         itemStatus: isLive,
-        status: isLive ? "PUBLISH" : "PRIVATE",
       });
 
       console.log("Mutation successful:", data);

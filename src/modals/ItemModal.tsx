@@ -40,21 +40,24 @@ const ItemModal = ({
     try {
       await wpgraphql.UpdateStatus(item.id, isLive);
 
-      await prizeStore.updateDrawItems().then(() => {
-        setDrawItem({
-          ...drawItem,
-          prizeItemsManagement: {
-            ...drawItem.prizeItemsManagement,
-            itemStatus: isLive, // new status
-          },
-        });
-
-        setLoading(false);
+      await prizeStore.updateDrawItems();
+      setDrawItem((currentItem) => ({
+        ...currentItem,
+        status: isLive ? "publish" : "private",
+        prizeItemsManagement: {
+          ...currentItem.prizeItemsManagement,
+          itemStatus: isLive,
+        },
+      }));
+    } catch (error) {
+      console.error("Failed to change prize item status:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error!",
+        text: "Something went wrong when changing this item's status.",
       });
-    } catch (e) {
-      console.log("error here");
-      setLoading(false);
     } finally {
+      setLoading(false);
     }
   };
 

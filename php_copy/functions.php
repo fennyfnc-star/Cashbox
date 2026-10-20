@@ -103,35 +103,55 @@ add_shortcode( 'prize_first_term', function() {
 });
 
 
+function cashbox_can_manage_prize_draws() {
+    if (!is_user_logged_in()) {
+        return false;
+    }
+
+    $user = wp_get_current_user();
+
+    return (bool) array_intersect(['administrator', 'editor'], (array) $user->roles);
+}
+
 function enqueue_react_app() {
     // Only load on your specific page
     if (is_page('prize-draw-management')) {
-        if (!is_user_logged_in() || !current_user_can('edit_posts')) return;
-        $manifest_path = get_stylesheet_directory() . '/react/assets/manifest.json';
+        if (!cashbox_can_manage_prize_draws()) return;
+        $build_path = get_stylesheet_directory() . '/react/build';
+        $manifest_path = $build_path . '/.vite/manifest.json';
 
         if (!file_exists($manifest_path)) return;
 
         $manifest = json_decode(file_get_contents($manifest_path), true);
+        $entry = $manifest['index.html'] ?? [];
 
         // Enqueue CSS
-        if (!empty($manifest['index.html']['css'][0])) {
+        foreach ($entry['css'] ?? [] as $index => $css_file) {
             wp_enqueue_style(
-                'react-app-css',
-                get_stylesheet_directory_uri() . '/react/assets/' . $manifest['index.html']['css'][0],
+                'react-app-css-' . $index,
+                get_stylesheet_directory_uri() . '/react/build/' . $css_file,
                 [],
                 null
             );
         }
 
         // Enqueue JS
-        if (!empty($manifest['index.html']['file'])) {
+        if (!empty($entry['file'])) {
             wp_enqueue_script(
                 'react-app-js',
-                get_stylesheet_directory_uri() . '/react/assets/' . $manifest['index.html']['file'],
+                get_stylesheet_directory_uri() . '/react/build/' . $entry['file'],
                 [],
                 null,
                 true
             );
+            add_filter('script_loader_tag', function($tag, $handle) {
+                if ($handle === 'react-app-js') {
+                    return str_replace('<script ', '<script type="module" ', $tag);
+                }
+
+                return $tag;
+            }, 10, 2);
+
             wp_add_inline_script('react-app-js', 'window.cashboxAuth = ' . wp_json_encode([
                 'nonce' => wp_create_nonce('wp_rest'),
                 'userId' => get_current_user_id(),
@@ -157,10 +177,6 @@ add_action('graphql_register_types', function() {
                 'type' => 'Boolean',
                 'description' => 'New status of the prize item',
             ],
-			'status' => [
-				'type' => 'String',
-				'description' => 'New post status'
-			]
         ],
         'outputFields' => [
             'prizeDraw' => [
@@ -175,23 +191,36 @@ add_action('graphql_register_types', function() {
 			$decoded = Relay::fromGlobalId($relay_id); // ['type' => 'PrizeDraw', 'id' => '8816']
 			$post_id = $decoded['id'];
 
-            if (!is_user_logged_in() || !current_user_can('edit_post', (int) $post_id)) {
+            if (
+                !cashbox_can_manage_prize_draws() ||
+                !current_user_can('edit_post', (int) $post_id)
+            ) {
                 throw new \GraphQL\Error\UserError('Not authorized to edit this prize draw.');
             }
 
-			$status = $input['itemStatus'];
-			$post_status = $input['status'];
+			$is_live = (bool) $input['itemStatus'];
+			$post_status = $is_live ? 'publish' : 'private';
 
 			// Update the ACF field
-			update_field('item_status', $status, $post_id);
+			update_field('field_696586af9585a', $is_live, $post_id);
+
+            $visibility_result = $is_live
+                ? wp_set_object_terms($post_id, ['live'], 'visibility', true)
+                : wp_remove_object_terms($post_id, 'live', 'visibility');
+            if (is_wp_error($visibility_result)) {
+                throw new \GraphQL\Error\UserError($visibility_result->get_error_message());
+            }
 
 			// Make sure the post is published
 			$post = get_post($post_id);
 			if ($post->post_status !== $post_status) {
-				wp_update_post([
+				$updated_post = wp_update_post([
 					'ID' => $post_id,
 					'post_status' => $post_status,
-				]);
+				], true);
+                if (is_wp_error($updated_post)) {
+                    throw new \GraphQL\Error\UserError($updated_post->get_error_message());
+                }
 			}
 
 			// Return the full WP_Post object for GraphQL

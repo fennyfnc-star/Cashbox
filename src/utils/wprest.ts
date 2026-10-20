@@ -75,6 +75,7 @@ class WPRestClient {
     try {
       await this.axiosInstance.delete(
         `/wp/v2/prize_draw/${decodeGraphQLId(item_id)}`,
+        { params: { force: true } },
       );
     } catch (err) {
       console.error("Failed to delete prize item:", err);
@@ -89,7 +90,12 @@ class WPRestClient {
     if (!item.id) throw new Error("no item id set!");
 
     try {
-      const payload = {
+      const payload: {
+        title: string;
+        status: "draft" | "publish";
+        acf: Record<string, string | number | boolean>;
+        prize_category: number[];
+      } = {
         title: item.title,
         status: status,
         acf: {
@@ -106,10 +112,12 @@ class WPRestClient {
       };
 
       if (item.mediaIds && item.mediaIds.length > 0) {
-        // @ts-ignore
         payload.acf["item_image"] = item.mediaIds[0];
 
-        await this.deleteMedia(decodeGraphQLId(String(item.mediaIds[1])));
+        const previousImageId = item.mediaIds[1];
+        if (previousImageId) {
+          await this.deleteMedia(decodeGraphQLId(String(previousImageId)));
+        }
       }
 
       const response = await this.axiosInstance.patch(

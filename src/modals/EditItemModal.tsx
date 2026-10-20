@@ -66,10 +66,11 @@ const EditItemModal = ({
     try {
       if (updatedItem.file) {
         const uploadResponse = await wprest.uploadMedia(updatedItem.file);
-        updatedItem.mediaIds = [
-          uploadResponse.id,
-          item.prizeItemsManagement.itemImage?.node.id,
-        ];
+        updatedItem.mediaIds = [uploadResponse.id];
+        const existingImageId = item.prizeItemsManagement.itemImage?.node.id;
+        if (existingImageId) {
+          updatedItem.mediaIds.push(existingImageId);
+        }
       }
 
       const response = await wprest.UpdatePrizeDrawItem(

@@ -31,7 +31,7 @@ export type CreatePrizeDrawProps = {
   tickets: number;
   itemCategory: string;
   boughtFrom: string;
-  mediaIds: number[];
+  mediaIds?: (number | string)[];
   itemNumber: string;
   file?: File;
 };

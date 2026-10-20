@@ -163,52 +163,53 @@ function enqueue_react_app() {
 }
 add_action('wp_enqueue_scripts', 'enqueue_react_app');
 
-
-use GraphQLRelay\Relay;
-
 add_action('graphql_register_types', function() {
     register_graphql_mutation('updatePrizeItemStatus', [
         'inputFields' => [
             'id' => [
                 'type' => 'ID',
-                'description' => 'Prize Draw ID (Relay ID)',
+                'description' => 'Prize draw Relay ID or numeric post ID.',
             ],
             'itemStatus' => [
                 'type' => 'Boolean',
-                'description' => 'New status of the prize item',
+                'description' => 'Whether the prize item is live.',
             ],
         ],
         'outputFields' => [
-            'prizeDraw' => [
-                'type' => 'PrizeDraw',
+            'success' => [
+                'type' => 'Boolean',
                 'resolve' => function($payload) {
-                    return $payload['post']; // now this is a WP_Post object
-                }
-            ]
-        ],		
-		'mutateAndGetPayload' => function($input) {
-			$relay_id = $input['id']; // e.g., "cG9zdDo4ODE2"
-			$decoded = Relay::fromGlobalId($relay_id); // ['type' => 'PrizeDraw', 'id' => '8816']
-			$post_id = $decoded['id'];
-            $post = get_post((int) $post_id);
+                    return $payload['success'];
+                },
+            ],
+        ],
+        'mutateAndGetPayload' => function($input) {
+            $raw_id = (string) $input['id'];
+            if (ctype_digit($raw_id)) {
+                $post_id = absint($raw_id);
+            } else {
+                $decoded = \GraphQLRelay\Relay::fromGlobalId($raw_id);
+                $post_id = absint($decoded['id'] ?? 0);
+            }
+
+            $post = get_post($post_id);
             if (!$post || $post->post_type !== 'prize_draw') {
                 throw new \GraphQL\Error\UserError('Prize draw item not found.');
             }
-
             if (
                 !cashbox_can_manage_prize_draws() ||
-                !current_user_can('edit_post', (int) $post_id)
+                !current_user_can('edit_post', $post_id)
             ) {
                 throw new \GraphQL\Error\UserError('Not authorized to edit this prize draw.');
             }
-
-			$is_live = (bool) $input['itemStatus'];
-			$post_status = $is_live ? 'publish' : 'private';
-
             if (!taxonomy_exists('visibility')) {
                 throw new \GraphQL\Error\UserError('The visibility taxonomy is not available.');
             }
+            if (!function_exists('update_field') || !function_exists('get_field')) {
+                throw new \GraphQL\Error\UserError('Advanced Custom Fields is not available.');
+            }
 
+            $is_live = (bool) $input['itemStatus'];
             $live_term = get_term_by('slug', 'live', 'visibility');
             if ($is_live && !$live_term) {
                 throw new \GraphQL\Error\UserError('The live visibility term does not exist.');
@@ -224,22 +225,23 @@ add_action('graphql_register_types', function() {
             }
 
             update_field('field_696586af9585a', $is_live, $post_id);
+            if ((bool) get_field('field_696586af9585a', $post_id) !== $is_live) {
+                throw new \GraphQL\Error\UserError('The item status could not be saved.');
+            }
 
-			if ($post->post_status !== $post_status) {
-				$updated_post = wp_update_post([
-					'ID' => $post_id,
-					'post_status' => $post_status,
-				], true);
+            $post_status = $is_live ? 'publish' : 'private';
+            if ($post->post_status !== $post_status) {
+                $updated_post = wp_update_post([
+                    'ID' => $post_id,
+                    'post_status' => $post_status,
+                ], true);
                 if (is_wp_error($updated_post)) {
                     throw new \GraphQL\Error\UserError($updated_post->get_error_message());
                 }
-			}
+            }
 
-			// Return the full WP_Post object for GraphQL
-			$post = get_post($post_id);
-
-			return ['post' => $post];
-		}
+            return ['success' => true];
+        },
     ]);
 });
 

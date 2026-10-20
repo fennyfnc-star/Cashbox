@@ -49,41 +49,33 @@ class WPGraphQLClient {
   }
 
   async UpdateStatus(id: string, isLive: boolean) {
-    try {
-      // Refresh token first
-  
-      // GraphQL mutation
-      const UPDATE_PRIZE_DRAW_STATUS = gql`
-        mutation UpdatePrizeDraw(
-          $id: ID!
-          $itemStatus: Boolean!
+    const UPDATE_PRIZE_DRAW_STATUS = gql`
+      mutation UpdatePrizeDrawStatus($id: ID!, $itemStatus: Boolean!) {
+        updatePrizeItemStatus(
+          input: { id: $id, itemStatus: $itemStatus }
         ) {
-          updatePrizeItemStatus(
-            input: { id: $id, itemStatus: $itemStatus }
-          ) {
-            prizeDraw {
-              id
-              status
-            }
-          }
+          success
         }
-      `;
+      }
+    `;
 
-      // Execute mutation
+    try {
       const data = await this.client.request(UPDATE_PRIZE_DRAW_STATUS, {
         id,
         itemStatus: isLive,
       });
-
-      console.log("Mutation successful:", data);
+      if (!data.updatePrizeItemStatus?.success) {
+        throw new Error("WordPress did not confirm the status update.");
+      }
       return data;
-    } catch (error: any) {
-      // Handle errors here
+    } catch (error) {
       console.error("Error updating prize item status:", error);
-
-      // Optional: you can throw or return a structured error
+      const graphQLError = error as {
+        response?: { errors?: Array<{ message?: string }> };
+      };
       throw new Error(
-        error?.response?.errors?.[0]?.message || "Unknown GraphQL error",
+        graphQLError.response?.errors?.[0]?.message ??
+          (error instanceof Error ? error.message : "Unknown GraphQL error"),
       );
     }
   }

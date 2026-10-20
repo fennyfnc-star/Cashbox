@@ -52,7 +52,7 @@ const AddItemModal = ({ open, setOpen }: ModalProps) => {
         publishItem ? "publish" : "draft",
       );
       if (publishItem) {
-        await wpgraphql.UpdateStatus(btoa(`post:${response.id}`), true);
+        await wpgraphql.UpdateStatus(String(response.id), true);
       }
       console.log(response);
 
